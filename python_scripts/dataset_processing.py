@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
-ROOT = '/home/gcf/Desktop/Talha_Nehal Sproj/Tahir Sproj Stuff/SPROJ_ConvMC_Net/Sensor_Data'
+ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
 
 def preprocess(L, D, size1, size2, size3):
 
@@ -17,23 +17,18 @@ def preprocess(L, D, size1, size2, size3):
 class ImageDataset(data.Dataset):
 
 
-    def __init__(self, NumInstances, shape, split, q, sigma, transform = None):
+    def __init__(self, NumInstances, shape, split, transform = None):
         self.shape = shape
 
         # dummy image loader
         images_L = torch.zeros(tuple([NumInstances]) + self.shape) # --> shape: (400, 49, 60)
         images_D = torch.zeros(tuple([NumInstances]) + self.shape) # --> shape: (400, 49, 60)
 
-        q_exp = f'/Q is {q * 100}%'
-        noise_exp = f'/Noise Variance {float(sigma)}'
-
         # TRAIN
         if split == 0:
             for n in range(NumInstances):
-                if np.mod(n, 2000) == 0: print('loading train set %s' % (n))
-
-                L = np.load(ROOT + q_exp + noise_exp + '/lowrank/train/L_mat_MC_train' + str(n) + '.npy')
-                D = np.load(ROOT + q_exp + noise_exp + '/groundtruth/train/ground_mat_MC_train' + str(n) + '.npy')
+                L = np.load(ROOT + '/lowrank/train/L_mat_MC_train' + str(n + 1) + '.npy')
+                D = np.load(ROOT + '/groundtruth/train/ground_mat_MC_train' + str(n + 1) + '.npy')
                 L, D = preprocess(L, D, None, None, None)
 
                 images_L[n] = torch.from_numpy(L)
@@ -42,10 +37,8 @@ class ImageDataset(data.Dataset):
          # TEST
         if split == 1:
             for n in range(NumInstances):
-                if np.mod(n, 2000) == 0: print('loading validation set %s' % (n ))
-
-                L = np.load(ROOT + q_exp + noise_exp + '/lowrank/test/L_mat_MC_test' + str(n) + '.npy')
-                D = np.load(ROOT + q_exp + noise_exp + '/groundtruth/test/ground_mat_MC_test' + str(n) + '.npy')
+                L = np.load(ROOT + '/lowrank/test/L_mat_MC_test' + str(n + 1) + '.npy')
+                D = np.load(ROOT + '/groundtruth/test/ground_mat_MC_test' + str(n + 1) + '.npy')
                 L, D = preprocess(L, D, None, None, None)
 
                 images_L[n] = torch.from_numpy(L)

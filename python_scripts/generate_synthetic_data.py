@@ -15,10 +15,12 @@ def generate(r, c, rak, num_train_instances, num_test_instances, sampling_rate, 
     for i in range(num_train_instances):
         M = np.dot(np.random.normal(size = (r, rak)), np.random.normal(size = (rak, c)))
         M_Omega = np.multiply(M, array_Omega)
-        omega = [(row_idx, col_idx) for row_idx, row in enumerate(array_Omega) for col_idx, value in enumerate(row) if array_Omega[row_idx, col_idx]]
-        noise = gaussian_noise(M_Omega[omega], 'GM', dB)
+
+        omega = np.where(array_Omega == 1)
+
+        noise = gaussian_noise.gaussian_noise(M_Omega[omega], 'GM', dB)
         Noise = np.zeros(M_Omega.shape)
-        Noise[omega] = noise
+        Noise[omega] = noise.reshape(noise.shape[0], )
         M_Omega = M_Omega + Noise
         
         M_train[i, :, :] = M
@@ -28,10 +30,10 @@ def generate(r, c, rak, num_train_instances, num_test_instances, sampling_rate, 
     for i in range(num_test_instances):
         M = np.dot(np.random.normal(size = (r, rak)), np.random.normal(size = (rak, c)))
         M_Omega = np.multiply(M, array_Omega)
-        omega = [(row_idx, col_idx) for row_idx, row in enumerate(array_Omega) for col_idx, value in enumerate(row) if array_Omega[row_idx, col_idx]]
-        noise = gaussian_noise(M_Omega[omega], 'GM', dB)
+        omega = np.where(array_Omega == 1)
+        noise = gaussian_noise.gaussian_noise(M_Omega[omega], 'GM', dB)
         Noise = np.zeros(M_Omega.shape)
-        Noise[omega] = noise
+        Noise[omega] = noise.reshape(noise.shape[0], )
         M_Omega = M_Omega + Noise
         
         M_test[i, :, :] = M

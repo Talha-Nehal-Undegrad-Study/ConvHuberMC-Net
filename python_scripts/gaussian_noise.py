@@ -28,6 +28,6 @@ def gaussian_noise(signal, model, SNR):
 
         flag = np.random.binomial(1, p, size = signal_size)
 
-        noise = np.multiply(sigma[0] * np.random.normal(size = signal_size), (np.ones(size = signal_size) - flag)) + np.multiply(sigma[1] * np.random.normal(size = signal_size), flag)
+        noise = np.multiply(sigma[0, 0] * np.random.normal(size = signal_size), (np.ones(shape = signal_size) - flag)) + np.multiply(sigma[0, 1] * np.random.normal(size = signal_size), flag)
     
     return noise
