@@ -15,7 +15,7 @@ M_test = np.zeros((num_test_instances, r, c))
 M_Omega_test = np.zeros((num_test_instances, r, c))
 
 # Loop to generate training data
-for i in range(1, num_train_instances)
+for i in range(1, num_train_instances):
     M = np.random.normal(size = (r, rak)) * np.random.normal(size = (rak, c))
     M_Omega = M * array_Omega
     omega = [(row_idx, col_idx) for row_idx, row in enumerate(array_Omega) for col_idx, value in enumerate(row) if array_Omega[row_idx, col_idx]]
@@ -28,7 +28,7 @@ for i in range(1, num_train_instances)
     M_Omega_train[i, :, :] = M_Omega
 
 # Loop to generate test data
-for i in range(1, num_test_instances)
+for i in range(1, num_test_instances):
     M = np.random.normal(size = (r, rak)) * np.random.normal(size = (rak, c))
     M_Omega = M .* array_Omega
     omega = [(row_idx, col_idx) for row_idx, row in enumerate(array_Omega) for col_idx, value in enumerate(row) if array_Omega[row_idx, col_idx]]
