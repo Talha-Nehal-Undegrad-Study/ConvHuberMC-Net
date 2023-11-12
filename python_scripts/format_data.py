@@ -3,7 +3,9 @@ import numpy as np
 from pathlib import Path
 
 
-ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data')
+# ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data')
+ROOT = Path('C:/Users/HP/Documents/GitHub/ConvHuberMC-Net/HuberMC_Data')
+
 os.makedirs(ROOT, exist_ok = True)
 
 ground_or_pred_dir = (ROOT / 'groundtruth')
