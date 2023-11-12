@@ -4,15 +4,15 @@ import torch.utils.data as data
 
 ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
 
-def preprocess(L, D, size1, size2, size3):
+# def preprocess(L, D, size1, size2, size3):
 
-    A = max(np.max(np.abs(L)), np.max(np.abs(D)))
-    if A == 0:
-        A = 1
-    L = L/A
-    D = D/A
+#     A = max(np.max(np.abs(L)), np.max(np.abs(D)))
+#     if A == 0:
+#         A = 1
+#     L = L/A
+#     D = D/A
 
-    return L, D
+#     return L, D
 
 class ImageDataset(data.Dataset):
 
@@ -29,7 +29,7 @@ class ImageDataset(data.Dataset):
             for n in range(NumInstances):
                 L = np.load(ROOT + '/lowrank/train/L_mat_MC_train' + str(n + 1) + '.npy')
                 D = np.load(ROOT + '/groundtruth/train/ground_mat_MC_train' + str(n + 1) + '.npy')
-                L, D = preprocess(L, D, None, None, None)
+                # L, D = preprocess(L, D, None, None, None)
 
                 images_L[n] = torch.from_numpy(L)
                 images_D[n] = torch.from_numpy(D)
@@ -39,7 +39,7 @@ class ImageDataset(data.Dataset):
             for n in range(NumInstances):
                 L = np.load(ROOT + '/lowrank/test/L_mat_MC_test' + str(n + 1) + '.npy')
                 D = np.load(ROOT + '/groundtruth/test/ground_mat_MC_test' + str(n + 1) + '.npy')
-                L, D = preprocess(L, D, None, None, None)
+                # L, D = preprocess(L, D, None, None, None)
 
                 images_L[n] = torch.from_numpy(L)
                 images_D[n] = torch.from_numpy(D)
