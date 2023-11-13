@@ -10,9 +10,10 @@ def to_var(X, CalInGPU):
 
 class HuberCell(nn.Module):
     # Constructor initalizes all the parameters that were passed to it from the unfolded net. Note: v, neta, lamda1/2, S are different for each layer. coef_gamma is constant
-    def __init__(self, c, lamda, mu, delta, tau, CalInGPU):
+    def __init__(self, c, lamda, mu, delta, tau, CalInGPU, layer):
         super(HuberCell,self).__init__()
-
+        if layer % 2 != 0:
+            self.V = torch.randn(160, 10)
         self.c = nn.Parameter(c)
         self.lamda = nn.Parameter(lamda)
         self.mu = nn.Parameter(mu)
@@ -103,7 +104,7 @@ class UnfoldedNet2dC_Huber(nn.Module):
     def makelayers(self):
         filt = []
         for i in range(self.layers):
-          filt.append(HuberCell(self.neta[i], self.v[i], self.lamda1[i] ** (i + 1), self.lamda2[i] ** (i + 1), self.S[i], self.rho[i] ** (i + 1), self.coef_gamma, self.CalInGPU))
+          filt.append(HuberCell(self.neta[i], self.v[i], self.lamda1[i] ** (i + 1), self.lamda2[i] ** (i + 1), self.S[i], self.rho[i] ** (i + 1), self.coef_gamma, self.CalInGPU, i + 1))
         return nn.Sequential(*filt)
 
     # Forward Pass recieves a list containing only one element for now and that is the Lowrank component
