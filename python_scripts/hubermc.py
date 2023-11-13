@@ -8,12 +8,36 @@ def to_var(X, CalInGPU):
         X = X.cuda()
     return Variable(X)
 
+
+class HuberForm(nn.Module):
+    def __init__(self, U, V, mask):
+        super(HuberForm,self).__init__()
+        self.mask = mask
+        self.U = U
+        self.V = V
+        self.indices_col, self.indices_row = self.get_row_col_indices(np.array(self.mask.cpu().detach()))
+
+    def get_row_col_indices(matrix):
+        # Get dimensions of matrix
+        n1, n2 = matrix.shape
+        
+        # First Column wise
+        indices_col = [np.where(matrix[:, i] == 1)[0] for i in range(n2)]
+
+        # Now Row wise
+        indices_row = [np.where(matrix[i, :] == 1)[0] for i in range(n1)]
+
+        return indices_col, indices_row
+    
+    def get_class_for_decomposed_form_U(self, )
+        
 class HuberCell(nn.Module):
     # Constructor initalizes all the parameters that were passed to it from the unfolded net. Note: v, neta, lamda1/2, S are different for each layer. coef_gamma is constant
     def __init__(self, c, lamda, mu, delta, tau, CalInGPU, layer):
         super(HuberCell,self).__init__()
-        if layer % 2 != 0:
-            self.V = torch.randn(160, 10)
+        
+        self.layer = layer
+
         self.c = nn.Parameter(c)
         self.lamda = nn.Parameter(lamda)
         self.mu = nn.Parameter(mu)
@@ -27,15 +51,16 @@ class HuberCell(nn.Module):
         self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()
 
+
+
     # Forward Pass recieves a list of 3 elements, data tensor of shape (2, 160, 320), a mask of shape (160, 320) which is True wherever there is
     # missing value in the matrix at index data[0], and rank of lowrank matrix
 
     def forward(self, lst):
-        # Get every element of the list
-        data = lst[0]
-        entries_mask = lst[1]
-        D_tilda = lst[2]
-        th_P = lst[3]
+        X_Omega, smapling_mat, rank = lst[0], lst[1], lst[2]
+        r, c = X_Omega.shape
+        self.U = torch.rand((r, rank)) 
+        self.V = U.torch.rand((rank, c))
 
         # Get the lowrank and the L matrix which is for now (49, 60) zeros
         input = data[0]
@@ -123,7 +148,7 @@ class UnfoldedNet2dC_Huber(nn.Module):
         
         data[0] = x_reconstructed
 
-        # Then forward pass to the Huber cell, the data tensor, the mask, D_tilda.
+        # Then forward pass to the Huber cell, the data tensor, the mask rank
         ans = self.filter([data, entries_mask, self.rank]) # X_Omega --> X_tilda --> UV_tilda --> 
         data = ans[0] 
         return ans
