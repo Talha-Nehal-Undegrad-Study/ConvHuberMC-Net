@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
-# ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
-ROOT = 'C:/Users/HP/Documents/GitHub/ConvHuberMC-Net/HuberMC_Data'
+ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
+# ROOT = 'C:/Users/HP/Documents/GitHub/ConvHuberMC-Net/HuberMC_Data'
 # def preprocess(L, D, size1, size2, size3):
 
 #     A = max(np.max(np.abs(L)), np.max(np.abs(D)))
