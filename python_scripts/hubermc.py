@@ -3,34 +3,24 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 # Function for cpu or gpu assignment
+
 def to_var(X, CalInGPU):
     if CalInGPU and torch.cuda.is_available():
         X = X.cuda()
     return Variable(X)
 
-
-class HuberForm(nn.Module):
-    def __init__(self, U, V, mask):
-        super(HuberForm,self).__init__()
-        self.mask = mask
-        self.U = U
-        self.V = V
-        self.indices_col, self.indices_row = self.get_row_col_indices(np.array(self.mask.cpu().detach()))
-
-    def get_row_col_indices(matrix):
-        # Get dimensions of matrix
-        n1, n2 = matrix.shape
-        
-        # First Column wise
-        indices_col = [np.where(matrix[:, i] == 1)[0] for i in range(n2)]
-
-        # Now Row wise
-        indices_row = [np.where(matrix[i, :] == 1)[0] for i in range(n1)]
-
-        return indices_col, indices_row
+def get_row_col_indices(matrix):
+    # Get dimensions of matrix
+    n1, n2 = matrix.shape
     
-    def get_class_for_decomposed_form_U(self, )
-        
+    # First Column wise
+    indices_col = [np.where(matrix[:, i] == 1)[0] for i in range(n2)]
+
+    # Now Row wise
+    indices_row = [np.where(matrix[i, :] == 1)[0] for i in range(n1)]
+
+    return indices_col, indices_row
+    
 class HuberCell(nn.Module):
     # Constructor initalizes all the parameters that were passed to it from the unfolded net. Note: v, neta, lamda1/2, S are different for each layer. coef_gamma is constant
     def __init__(self, c, lamda, mu, delta, tau, CalInGPU, layer):
@@ -38,12 +28,12 @@ class HuberCell(nn.Module):
         
         self.layer = layer
 
-        self.c = nn.Parameter(c)
-        self.lamda = nn.Parameter(lamda)
-        self.mu = nn.Parameter(mu)
+        self.c = (c)
+        self.lamda = (lamda)
+        self.mu = (mu)
 
-        self.delta = nn.Parameter(delta)
-        self.tau = nn.Parameter(tau)
+        self.delta = (delta)
+        self.tau = (tau)
         
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
@@ -101,13 +91,16 @@ class HuberCell(nn.Module):
         data[1] = Ltmp.view(H, U)
         return [data, entries_mask, D_tilda, Ptmp.view(H,U)]
 
-class UnfoldedNet2dC_Huber(nn.Module):
+class UnfoldedNet_Huber(nn.Module):
     def __init__(self, params = None, model_denoise = None):
-        super(UnfoldedNet2dC_Huber, self).__init__()
+        super(UnfoldedNet_Huber, self).__init__()
         
         # Constructor initializes various parameters from the given parameter dictionary
         self.layers = params['layers']
         self.CalInGPU = params['CalInGPU']
+        
+        self.n1, self.n2 = params['size1'], params['size2']
+        self.rank = params['rank']
         
         self.model_denoise = model_denoise
 
@@ -120,20 +113,35 @@ class UnfoldedNet2dC_Huber(nn.Module):
         self.initial_delta = to_var(torch.ones(self.layers, requires_grad = True) * params['initial_delta'], self.CalInGPU)
         self.initial_tau = to_var(torch.ones(self.layers, requires_grad = True) * params['initial_tau'], self.CalInGPU)
 
+        # For matrix if needed
+        # self.S = to_var(torch.ones((self.layers, params['size1'], params['size1']), requires_grad = True) * params['initial_S'], self.CalInGPU, True)
+        # self.y1 = nn.Parameter(to_var(torch.ones((params['size1'], params['size2']), requires_grad = True) * params['initial_y1'], self.CalInGPU))
+
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.sig = nn.Sigmoid()
         self.relu = nn.ReLU()
-        self.filter = self.makelayers()
+
+        self.model = self.makelayers()
 
     # Function which intializes num_layers ISTA cells by passing it those parameters that are learnt per layer like lambda1/2, neta, S and those that are fixed like coef_gamma
     def makelayers(self):
         filt = []
-        for i in range(self.layers):
-          filt.append(HuberCell(self.neta[i], self.v[i], self.lamda1[i] ** (i + 1), self.lamda2[i] ** (i + 1), self.S[i], self.rho[i] ** (i + 1), self.coef_gamma, self.CalInGPU, i + 1))
-        return nn.Sequential(*filt)
+        for layer_idx in range(1, self.layers + 1):
+          if layer_idx % 2 != 0: # --> V Update Layer
+              
+          pass
 
-    # Forward Pass recieves a list containing only one element for now and that is the Lowrank component
-    def forward(self, x): 
+    # Forward Pass recieves the lowrank noisy matrix
+    def forward(self, x):
+                
+        self.U = torch.ones(self.n1, self.rank)
+        self.V = torch.ones(self.rank, self.n2)
+
+        # Now initalize the neural architecture of even number of layers where even numbered layers correspond to updating U and odd numbered
+        # layers correspond to updating V. Each odd numbered layers will have number of nodes equal to number of rows and each even numbered 
+        # column will have number of nodes equal to the number of columns. Each node in layer is connected to a huber cell of certain number of
+        # iterations and each huber cell in each layer will have same initalization of parameters at start. 
+
         # We intialize a tensor 'data' of shape (2, 160, 320) and assign the first index of it with the lowrank component passed i.e. first element of x
         data = to_var(torch.zeros([2] + list(x[0].shape)), self.CalInGPU)
         data[0] = x[0]
