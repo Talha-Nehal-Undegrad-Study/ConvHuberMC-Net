@@ -243,8 +243,13 @@ class UnfoldedNet_Huber(nn.Module):
         # iterations and each huber cell in each layer will have same initalization of parameters at start. 
 
         sampling_mat = torch.where(x != 0, torch.tensor(1), torch.tensor(0))
-        lst = [x, sampling_mat, self.rank, ] #  X_Omega, sampling_mat, rank, V, u_row, row_num send these arguments some to huber cell
+        v_args = [self.V[:, i] for i in range(self.V.shape[1])]
+        u_args = [self.U[i, :] for i in range(self.U.shape[0])]
+        rank = self.rank
+       #  X_Omega, sampling_mat, rank, V, u_row, row_num send these arguments some to huber cell
         # but the problem is the model is sequential and different arguments for V or U Huber Cell. So use multiprocessing here if possible
+        arglist_v = ((x, sampling_mat, self.rank, self.U, ))
+
 
         # Basic syntax
         with concurrent.futures.ProcessPoolExecutor() as executor:
