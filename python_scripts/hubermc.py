@@ -10,7 +10,7 @@ def to_var(X, CalInGPU):
     if CalInGPU and torch.cuda.is_available():
         X = X.cuda()
     return Variable(X)
-    
+
 class HuberCellV(nn.Module):
     # Constructor initalizes all the parameters that were passed to it from the unfolded net. Note: v, neta, lamda1/2, S are different for each layer. coef_gamma is constant
     def __init__(self, c, w, lamda, sigma, mu, delta, tau, iter, CalInGPU = True):
