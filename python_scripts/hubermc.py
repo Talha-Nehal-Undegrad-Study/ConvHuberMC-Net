@@ -115,7 +115,6 @@ class HuberCellU(nn.Module):
         self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()
 
-    
     def get_row_col_indices(matrix): # returns the indices of the sampling matrix where row entries or column entries are non-zero
     # Get dimensions of matrix
         n1, n2 = matrix.shape
