@@ -37,13 +37,13 @@ class Huber(nn.Module):
         lamda = self.lamda[layer].detach().clone()
         mu = self.mu[layer].detach().clone()
 
-        alpha = (0.5 * (c.numpy() * 2) * (1 - stats.chi2.cdf(c.numpy() * 2, df=1))) + (0.5 * stats.chi2.cdf(c.numpy() ** 2, df=3))
-        X_plus = torch.inverse(X.t() @ X) @ X.t() # Future Purpose Note: Computationally Expensive
+        alpha = (0.5 * (c.numpy() * 2) * (1 - stats.chi2.cdf(c.numpy() * 2, df = 1))) + (0.5 * stats.chi2.cdf(c.numpy() ** 2, df = 3))
+        X_plus = torch.inverse(X.t() @ X) @ X.t() # Future Purpose Note: Computationally Expensiv e
 
         for _ in range(self.hubreg_iters):
             r = y - (X @ beta)
             tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
-            sigma = tau*lamda
+            sigma = tau * lamda
             delta = X_plus @ (self.hub_deriv(r / sigma, c) * sigma)
             beta += mu * delta
         # Return the result and attach gradients
