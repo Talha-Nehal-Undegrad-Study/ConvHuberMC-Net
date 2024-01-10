@@ -30,9 +30,9 @@ class UnfoldedNet_Huber(nn.Module):
 
         self.rank = params['rank']
         
-        self.c = to_var(torch.tensor(params['initial_c']), self.CalInGPU)
-        self.lamda = to_var(torch.tensor(params['initial_lamda']), self.CalInGPU)
-        self.mu = to_var(torch.tensor(params['initial_mu']), self.CalInGPU)
+        self.c = to_var(torch.ones(self.layers) * torch.tensor(params['initial_c']), self.CalInGPU)
+        self.lamda = to_var(torch.ones(self.layers) * torch.tensor(params['initial_lamda']), self.CalInGPU)
+        self.mu = to_var(torch.ones(self.layers) * torch.tensor(params['initial_mu']), self.CalInGPU)
 
         self.sigma = to_var(torch.tensor(params['initial_sigma']), False)
 
@@ -53,3 +53,36 @@ class UnfoldedNet_Huber(nn.Module):
         pred_matrix = self.huber_obj.forward(self.U, self.V, x)
 
         return pred_matrix
+    
+    
+    def getexp_LS(self):
+        lamda1 = self.lamda1
+        lamda2 = self.lamda2
+
+        v = self.v
+        S = self.S
+        rho = self.rho
+        
+        coef_gamma = self.coef_gamma
+        # exp_tau used for svt threshold of Z/X (eq 13 of original paper)
+        exp_tau = self.sig(v) * coef_gamma
+
+        if torch.cuda.is_available():
+          neta = neta.cpu().detach().numpy()
+          v = v.cpu().detach().numpy()
+          lamda1 = lamda1.cpu().detach().numpy()
+          lamda2 = lamda2.cpu().detach().numpy()
+          S = S.cpu().detach().numpy()
+          rho = rho.cpu().detach().numpy()
+          coef_gamma = coef_gamma.cpu().detach().numpy()
+          exp_tau = exp_tau.cpu().detach().numpy()
+        else:
+          neta = neta.detach().numpy()
+          v = v.detach().numpy()
+          lamda1 = lamda1.detach().numpy()
+          lamda2 = lamda2.detach().numpy()
+          S = S.detach().numpy()
+          rho = rho.detach().numpy()
+          coef_gamma = coef_gamma.detach().numpy()
+          exp_tau = exp_tau.detach().numpy()
+        return neta, v, lamda1, lamda2, S, rho, coef_gamma, exp_tau

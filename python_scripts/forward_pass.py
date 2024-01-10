@@ -6,13 +6,13 @@ import concurrent.futures
 
 class Huber(nn.Module):
 
-    def _init_(self, sigma, c = 1.345, lamda = 1, mu = 0, hubreg_iters = 2, layers = 3):
-        super(Huber, self)._init_()
-        
+    def __init__(self, sigma, c, lamda, mu, hubreg_iters = 2, layers = 3):
+        super(Huber, self).__init__()
+
         # learnables
-        self.c = nn.Parameter(c)
-        self.lamda = nn.Parameter(lamda)
-        self.mu = nn.Parameter(mu)
+        self.c = nn.ParameterList([nn.Parameter(c_ele) for c_ele in c])
+        self.lamda = nn.ParameterList([nn.Parameter(lambda_ele) for lambda_ele in c])
+        self.mu = nn.ParameterList([nn.Parameter(mu_ele) for mu_ele in c])
 
         # non-learnables
         self.sigma = sigma
@@ -23,28 +23,28 @@ class Huber(nn.Module):
         # returns row indices of non-zero elements in column
         return torch.nonzero(column).squeeze()
 
-    def hub_deriv(self, x):
+    def hub_deriv(self, x, c):
         # returns the derivative of Equation 2 from Block-Wise Minimization-Majorization Algorithm for Huber'S Criterion: Sparse Learning And Applications
 
-        return torch.cat((x[abs(x) <= self.c], self.c * torch.sign(x[abs(x) > self.c])))
+        return torch.cat((x[abs(x) <= c], c * torch.sign(x[abs(x) > c])))
 
     def hubreg(self, tup_arg):
-        beta, X, y = tup_arg[0], tup_arg[1], tup_arg[2]
+        beta, X, y, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
 
         # Detach parameters before using them in the function
         sigma = self.sigma.detach().clone()
-        c = self.c.detach().clone()
-        lamda = self.lamda.detach().clone()
-        mu = self.mu.detach().clone()
+        c = self.c[layer].detach().clone()
+        lamda = self.lamda[layer].detach().clone()
+        mu = self.mu[layer].detach().clone()
 
         alpha = (0.5 * (c.numpy() * 2) * (1 - stats.chi2.cdf(c.numpy() * 2, df=1))) + (0.5 * stats.chi2.cdf(c.numpy() ** 2, df=3))
-        X_plus = torch.inverse(X.t() @ X) @ X.t()
+        X_plus = torch.inverse(X.t() @ X) @ X.t() # Future Purpose Note: Computationally Expensive
 
         for _ in range(self.hubreg_iters):
             r = y - (X @ beta)
-            tau = torch.norm(self.hub_deriv(r / sigma)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
             sigma = tau*lamda
-            delta = X_plus @ (self.hub_deriv(r / sigma) * sigma)
+            delta = X_plus @ (self.hub_deriv(r / sigma, c) * sigma)
             beta += mu * delta
         # Return the result and attach gradients
         return beta.detach().requires_grad_()
@@ -70,7 +70,7 @@ class Huber(nn.Module):
         u_rows = [self.get_rows(self.X[i, :]) for i in range(self.U.shape[0])]
         argslist_u = ((self.U[i, :].t().detach(), self.V[:, rows].t().detach(), self.X[i, rows].t().detach()) for i, rows in enumerate(u_rows))
 
-        for _ in range(self.layers):
+        for layer in range(self.layers):
 
             # with concurrent.futures.ProcessPoolExecutor() as executor:
             #     resultsv = list(executor.map(self.hubreg, argslist_v))
@@ -90,10 +90,10 @@ class Huber(nn.Module):
 
             for j in range(self.V.shape[1]):
                 rows = self.get_rows(self.X[:, j]) # row indices for jth column
-                self.V[:, j] = self.hubreg((self.V[:, j], self.U[rows, :], self.X[rows, j])) # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
+                self.V[:, j] = self.hubreg((self.V[:, j], self.U[rows, :], self.X[rows, j], layer)) # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
             for i in range(self.U.shape[0]):
                 rows = self.get_rows(self.X[i, :]) # column indices for ith row
-                self.U[i, :] = self.hubreg(self.U[i, :].t(), self.V[:, rows].t(), self.X[i, rows].t()).t() # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
+                self.U[i, :] = self.hubreg((self.U[i, :].t(), self.V[:, rows].t(), self.X[i, rows].t(), layer)).t() # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
         return torch.matmul(self.U, self.V)

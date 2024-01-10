@@ -39,4 +39,4 @@ def generate(r, c, rak, num_train_instances, num_test_instances, sampling_rate, 
         M_test[i, :, :] = M
         M_Omega_test[i, :, :] = M_Omega
 
-        return M_train, M_Omega_train, M_test, M_Omega_test
+    return M_train, M_Omega_train, M_test, M_Omega_test
