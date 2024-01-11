@@ -39,9 +39,9 @@ class Huber(nn.Module):
         mu = self.mu[layer].detach().clone()
 
         alpha = (0.5 * (c.numpy() * 2) * (1 - stats.chi2.cdf(c.numpy() * 2, df = 1))) + (0.5 * stats.chi2.cdf(c.numpy() ** 2, df = 3))
-        temp = torch.eye(X.shape[1]) * torch.tensor(1e-5)
+        temp = torch.eye(X.shape[1]) * torch.tensor(1e-10)
         inv_matrix = (X.t() @ X) + temp
-        print(f'Inv Matrix V: {inv_matrix}, diagonal_elements: {torch.diagonal(inv_matrix)}')
+        # print(f'Inv Matrix V: {inv_matrix}, diagonal_elements: {torch.diagonal(inv_matrix)}')
         X_plus = torch.inverse(inv_matrix) @ X.t() # Future Purpose Note: Computationally Expensive
 
         for _ in range(self.hubreg_iters):
@@ -66,9 +66,9 @@ class Huber(nn.Module):
         mu = self.mu[layer].detach().clone()
 
         alpha = (0.5 * (c.numpy() * 2) * (1 - stats.chi2.cdf(c.numpy() * 2, df = 1))) + (0.5 * stats.chi2.cdf(c.numpy() ** 2, df = 3))
-        temp = torch.eye(X.shape[1]) * torch.tensor(1e-5)
+        temp = torch.eye(X.shape[1]) * torch.tensor(1e-10)
         inv_matrix = (X.t() @ X) + temp
-        print(f'Inv Matrix U: {inv_matrix}, diagonal_elements: {torch.diagonal(inv_matrix)}')
+        # print(f'Inv Matrix U: {inv_matrix}, diagonal_elements: {torch.diagonal(inv_matrix)}')
         X_plus = torch.inverse(inv_matrix) @ X.t() # Future Purpose Note: Computationally Expensive # (j_i, r)
 
         for _ in range(self.hubreg_iters):

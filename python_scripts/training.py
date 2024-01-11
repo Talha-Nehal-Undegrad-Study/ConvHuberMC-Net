@@ -84,7 +84,7 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
             loss_mean += loss.item()
             loss_lowrank_mean += loss_lowrank.item()
             if not inference:
-              loss.backward()
+              loss.backward(retain_graph = True)
     if not inference:
         optimizer.step()
   loss_mean = loss_mean/TrainInstances
