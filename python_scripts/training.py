@@ -72,7 +72,7 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
   for _, (D, L) in enumerate(dataloader):
     # set the gradients to zero at the beginning of each epoch
     optimizer.zero_grad()
-    with torch.autograd.set_detect_anomaly(True):
+    with torch.autograd.set_detect_anomaly(False):
         for mat in range(batch):
             inputs = architecture.to_var(D[mat], CalInGPU)
             targets_L = architecture.to_var(L[mat], CalInGPU)

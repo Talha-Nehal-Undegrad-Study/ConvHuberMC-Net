@@ -28,7 +28,8 @@ class Huber(nn.Module):
 
         return torch.cat((x[abs(x) <= c], c * torch.sign(x[abs(x) > c])))
 
-    def hubreg(self, tup_arg):
+    def hubregv(self, tup_arg):
+        # beta: (1, r), X: (r, j_i), y: (1, j_i)
         beta, X, y, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
 
         # Detach parameters before using them in the function
@@ -38,7 +39,10 @@ class Huber(nn.Module):
         mu = self.mu[layer].detach().clone()
 
         alpha = (0.5 * (c.numpy() * 2) * (1 - stats.chi2.cdf(c.numpy() * 2, df = 1))) + (0.5 * stats.chi2.cdf(c.numpy() ** 2, df = 3))
-        X_plus = torch.inverse(X.t() @ X) @ X.t() # Future Purpose Note: Computationally Expensiv e
+        temp = torch.eye(X.shape[1]) * torch.tensor(1e-5)
+        inv_matrix = (X.t() @ X) + temp
+        print(f'Inv Matrix V: {inv_matrix}, diagonal_elements: {torch.diagonal(inv_matrix)}')
+        X_plus = torch.inverse(inv_matrix) @ X.t() # Future Purpose Note: Computationally Expensive
 
         for _ in range(self.hubreg_iters):
             r = y - (X @ beta)
@@ -46,9 +50,36 @@ class Huber(nn.Module):
             sigma = tau * lamda
             delta = X_plus @ (self.hub_deriv(r / sigma, c) * sigma)
             beta += mu * delta
+
         # Return the result and attach gradients
         return beta.detach().requires_grad_()
 
+    def hubregu(self, tup_arg):
+        # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
+
+        beta, X, y, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
+
+        # Detach parameters before using them in the function
+        sigma = self.sigma.detach().clone()
+        c = self.c[layer].detach().clone()
+        lamda = self.lamda[layer].detach().clone()
+        mu = self.mu[layer].detach().clone()
+
+        alpha = (0.5 * (c.numpy() * 2) * (1 - stats.chi2.cdf(c.numpy() * 2, df = 1))) + (0.5 * stats.chi2.cdf(c.numpy() ** 2, df = 3))
+        temp = torch.eye(X.shape[1]) * torch.tensor(1e-5)
+        inv_matrix = (X.t() @ X) + temp
+        print(f'Inv Matrix U: {inv_matrix}, diagonal_elements: {torch.diagonal(inv_matrix)}')
+        X_plus = torch.inverse(inv_matrix) @ X.t() # Future Purpose Note: Computationally Expensive # (j_i, r)
+
+        for _ in range(self.hubreg_iters):
+            r = y - (beta @ X) # (1, j_i)
+            tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
+            sigma = tau * lamda
+            delta = (self.hub_deriv(r / sigma, c) * sigma) @ X_plus
+            beta += mu * delta # (1, r)
+
+        # Return the result and attach gradients
+        return beta.detach().requires_grad_()
         # So use multiprocessing here if possible
 
         # # Basic syntax
@@ -90,10 +121,10 @@ class Huber(nn.Module):
 
             for j in range(self.V.shape[1]):
                 rows = self.get_rows(self.X[:, j]) # row indices for jth column
-                self.V[:, j] = self.hubreg((self.V[:, j], self.U[rows, :], self.X[rows, j], layer)) # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
+                self.V[:, j] = self.hubregv((self.V[:, j], self.U[rows, :], self.X[rows, j], layer)) # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
             for i in range(self.U.shape[0]):
                 rows = self.get_rows(self.X[i, :]) # column indices for ith row
-                self.U[i, :] = self.hubreg((self.U[i, :].t(), self.V[:, rows].t(), self.X[i, rows].t(), layer)).t() # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
+                self.U[i, :] = self.hubregu((self.U[i, :], self.V[:, rows], self.X[i, rows], layer)) # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
         return torch.matmul(self.U, self.V)
