@@ -49,7 +49,7 @@ class Huber(nn.Module):
             tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
             sigma = tau * lamda
             delta = X_plus @ (self.hub_deriv(r / sigma, c) * sigma)
-            beta += mu * delta
+            beta = beta + (mu * delta)
 
         # Return the result and attach gradients
         return beta.detach().requires_grad_()
@@ -76,7 +76,7 @@ class Huber(nn.Module):
             tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
             sigma = tau * lamda
             delta = (self.hub_deriv(r / sigma, c) * sigma) @ X_plus
-            beta += mu * delta # (1, r)
+            beta = beta + mu * delta # (1, r)
 
         # Return the result and attach gradients
         return beta.detach().requires_grad_()
