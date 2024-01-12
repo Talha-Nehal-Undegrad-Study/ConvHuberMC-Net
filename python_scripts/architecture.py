@@ -1,88 +1,119 @@
 import numpy as np
 import torch
 from torch import nn
-from torch.autograd import Variable
-from python_scripts import forward_pass
 import scipy.stats as stats
 import concurrent.futures
-# Function for cpu or gpu assignment
 
-def to_var(X, CalInGPU):
-    if CalInGPU and torch.cuda.is_available():
-        X = X.cuda()
-    return Variable(X)
-
-class UnfoldedNet_Huber(nn.Module):
-    def __init__(self, params = None, model_denoise = None):
-        super(UnfoldedNet_Huber, self).__init__()
-        
-        # Constructor initializes various parameters from the given parameter dictionary
-        self.layers = params['layers']
-        self.CalInGPU = params['CalInGPU']
+class Huber(nn.Module):
+    def __init__(self, params):
+        super(Huber, self).__init__()
 
         self.n1, self.n2 = params['size1'], params['size2']
         self.rank = params['rank']
-        self.iter = params['iter']
+        self.U = torch.randn(self.n1, self.rank, requires_grad = True).to(device)
+        self.V = torch.randn(self.rank, self.n2, requires_grad = True).to(device)
 
-        self.U = torch.randn(self.n1, self.rank)
-        self.V = torch.randn(self.rank, self.n2)        
-        # self.model_denoise = model_denoise
+        self.hubreg_iters = params['hubreg_iters']
+        self.layers = params['layers']
+        self.sigma = torch.tensor(params['initial_sigma']).to(device)
+        c_list = (torch.ones(self.layers) * torch.tensor(params['initial_c'])).to(device)
+        lamda_list = (torch.ones(self.layers) * torch.tensor(params['initial_lamda'])).to(device)
+        mu_list = (torch.ones(self.layers) * torch.tensor(params['initial_mu'])).to(device)
 
-        self.rank = params['rank']
+        # learnables
+        self.c_list = nn.ParameterList([nn.Parameter(c) for c in c_list])
+        self.lamda_list = nn.ParameterList([nn.Parameter(lamda) for lamda in lamda_list])
+        self.mu_list = nn.ParameterList([nn.Parameter(mu) for mu in mu_list])
+
+        # non-learnables
+        # self.sigma = sigma
+        # self.hubreg_iters = hubreg_iters
+        # self.layers = layers
+
+    def get_rows(self, column):
+        # returns row indices of non-zero elements in column
+
+        return torch.nonzero(column).squeeze()
+
+    def hub_deriv(self, x, c):
+        # returns the derivative of Equation 2 from Block-Wise Minimization-Majorization Algorithm for Huber'S Criterion: Sparse Learning And Applications
+
+        return torch.cat((x[abs(x) <= c], c * torch.sign(x[abs(x) > c])))
+
+    def hubregv(self, tup_arg):
+        # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
+
+        beta, X, y, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
+
+        sigma = self.sigma
+        c = self.c_list[layer].clone().detach()
+        lamda = self.lamda_list[layer]
+        mu = self.mu_list[layer]
+
+        alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
+        try:
+            X_plus = torch.inverse(X.t() @ X) @ X.t()
+        except Exception as e:
+            print(e)
+            print(X.shape, X.t().shape)
+            temp = X.t() @ X
+            for i in range(len(temp)):
+                print(i)
+                print(temp[i, i])
+            return None
+
+        for _ in range(self.hubreg_iters):
+            r = y - (X @ beta)
+            tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
+            sigma = tau * lamda
+            delta = X_plus @ (self.hub_deriv(r / sigma, c).unsqueeze(1) * sigma)
+            beta = beta + (mu * delta)
+
+        return beta.clone().detach()
+
+    def hubregu(self, tup_arg):
+        # beta: (1, r), X: (r, i_j), y: (1, i_j)
+
+        beta, X, y, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
+
+        sigma = self.sigma
+        c = self.c_list[layer].clone().detach()
+        lamda = self.lamda_list[layer]
+        mu = self.mu_list[layer]
+
+        alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
+        try:
+            X_plus = torch.inverse(X.t() @ X) @ X.t()
+        except Exception as e:
+            print(e)
+            print(X.shape, X.t().shape)
+            temp = X.t() @ X
+            for i in range(len(temp)):
+                print(i)
+                print(temp[i, i])
+            return None
         
-        self.c = to_var(torch.ones(self.layers) * torch.tensor(params['initial_c']), self.CalInGPU)
-        self.lamda = to_var(torch.ones(self.layers) * torch.tensor(params['initial_lamda']), self.CalInGPU)
-        self.mu = to_var(torch.ones(self.layers) * torch.tensor(params['initial_mu']), self.CalInGPU)
+        for _ in range(self.hubreg_iters):
+            r = y - (beta @ X) # (1, j_i)
+            tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
+            sigma = tau * lamda
+            delta = (self.hub_deriv(r / sigma, c).unsqueeze(0) * sigma) @ X_plus
+            beta = beta + (mu * delta) # (1, r)
 
-        self.sigma = to_var(torch.tensor(params['initial_sigma']), False)
+        return beta.clone().detach()
 
-        self.huber_obj = forward_pass.Huber(self.sigma, self.c, self.lamda, self.mu, self.iter, self.layers)
+    def forward(self, X):
+        # runs Algorithm 1 from Robust M-Estimation Based Matrix Completion
 
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.sig = nn.Sigmoid()
-        self.relu = nn.ReLU()
+        U = self.U.clone().detach()
+        V = self.V.clone().detach()
 
-    # Forward Pass recieves the lowrank noisy matrix
-    def forward(self, x):
+        for layer in range(self.layers):
+            for j in range(V.shape[1]):
+                rows = self.get_rows(X[:, j]) # row indices for jth column
+                V[:, j:j+1] = self.hubregv((V[:, j:j+1], U[rows, :], X[rows, j:j+1], layer))
 
-        # Now initalize the neural architecture of even number of layers where even numbered layers correspond to updating U and odd numbered
-        # layers correspond to updating V. Each odd numbered layers will have number of nodes equal to number of rows and each even numbered 
-        # column will have number of nodes equal to the number of columns. For now, same parameters either learnable or not throughout
-
-        # Step 1: Compute Forward Pass through all the layers and predict ground truth matrix
-        pred_matrix = self.huber_obj.forward(self.U, self.V, x)
-
-        return pred_matrix
-    
-    
-    def getexp_LS(self):
-        lamda1 = self.lamda1
-        lamda2 = self.lamda2
-
-        v = self.v
-        S = self.S
-        rho = self.rho
-        
-        coef_gamma = self.coef_gamma
-        # exp_tau used for svt threshold of Z/X (eq 13 of original paper)
-        exp_tau = self.sig(v) * coef_gamma
-
-        if torch.cuda.is_available():
-          neta = neta.cpu().detach().numpy()
-          v = v.cpu().detach().numpy()
-          lamda1 = lamda1.cpu().detach().numpy()
-          lamda2 = lamda2.cpu().detach().numpy()
-          S = S.cpu().detach().numpy()
-          rho = rho.cpu().detach().numpy()
-          coef_gamma = coef_gamma.cpu().detach().numpy()
-          exp_tau = exp_tau.cpu().detach().numpy()
-        else:
-          neta = neta.detach().numpy()
-          v = v.detach().numpy()
-          lamda1 = lamda1.detach().numpy()
-          lamda2 = lamda2.detach().numpy()
-          S = S.detach().numpy()
-          rho = rho.detach().numpy()
-          coef_gamma = coef_gamma.detach().numpy()
-          exp_tau = exp_tau.detach().numpy()
-        return neta, v, lamda1, lamda2, S, rho, coef_gamma, exp_tau
+            for i in range(U.shape[0]):
+                columns = self.get_rows(X[i, :]) # column indices for ith row
+                U[i:i+1, :] = self.hubregu((U[i:i+1, :], V[:, columns], X[i:i+1, columns], layer))
+        return U @ V
