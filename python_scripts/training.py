@@ -35,7 +35,7 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
         print('Instantiating Model...\n')
         log.write('Instantiating Model...\n')
         if hyper_param_net['Model'] == 'HuberMC-Net':
-            net = architecture.UnfoldedNet_Huber(params_net)
+            net = architecture.Huber(params_net)
             print('Model Instantiated...\n')
             log.write('Model Instantiated...\n')
 
@@ -44,7 +44,8 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
         log.write('Loading Model...\n')
         if hyper_param_net['Model'] == 'HuberMC-Net':
             if load_frm == 'state_dict':
-                net = architecture.UnfoldedNet_Huber(params_net)
+                torch.autograd.set_detect_anomaly(True)
+                net = architecture.Huber(params_net)
                 state_dict = torch.load(path_dict, map_location = 'cpu')
                 net.load_state_dict(state_dict)
                 print('Model loaded from state dict...\n')
@@ -63,6 +64,7 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
 
 def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, batch, inference = False):
   # Put model in train mode
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
   model.train()
 
   # Initalize loss for lowrank matrices which will be calculated per batch for each epoch
@@ -74,17 +76,18 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
     optimizer.zero_grad()
     with torch.autograd.set_detect_anomaly(False):
         for mat in range(batch):
-            inputs = architecture.to_var(D[mat], CalInGPU)
-            targets_L = architecture.to_var(L[mat], CalInGPU)
+            inputs = D[mat].to(device)
+            targets_L = L[mat].to(device)
             # Forward + backward + loss
             outputs_L = model(inputs)
             # Current loss
             loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
+            loss.requires_grad = True
             loss_lowrank = (loss_fn(outputs_L,targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
             loss_mean += loss.item()
             loss_lowrank_mean += loss_lowrank.item()
             if not inference:
-              loss.backward(retain_graph = True)
+              loss.backward()
     if not inference:
         optimizer.step()
   loss_mean = loss_mean/TrainInstances
@@ -93,6 +96,7 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
   return loss_mean, loss_lowrank_mean
 
 def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
+  device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
   model.eval()
   loss_val_mean, loss_val_lowrank_mean = 0, 0
@@ -101,8 +105,8 @@ def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
   with torch.no_grad():
     for _, (D, L) in enumerate(dataloader):
       for mat in range(batch):
-        inputs = architecture.to_var(D[mat], CalInGPU)   # "mat"th picture
-        targets_L = architecture.to_var(L[mat], CalInGPU)
+        inputs = D[mat].to(device)   # "mat"th picture
+        targets_L = L[mat].to(device)
         outputs = model(inputs)  # Forward
         # Current loss
         loss_val = loss_fn(outputs, targets_L)/torch.square(torch.norm(targets_L, p = 'fro'))

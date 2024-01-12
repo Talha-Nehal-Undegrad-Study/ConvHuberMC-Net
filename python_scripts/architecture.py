@@ -44,40 +44,53 @@ class Huber(nn.Module):
         # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
         beta, X, y, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
+        # print(f'in V: beta.shape: {beta.shape}, X.shape: {X.shape}, y.shape: {y.shape}')
 
+        # Detach parameters before using them in the function
         sigma = self.sigma
-        c = self.c_list[layer].clone().detach()
+        # print(sigma.requires_grad)
+        c = self.c_list[layer].clone().cpu().detach()
+        # print(c.requires_grad)
         lamda = self.lamda_list[layer]
+        # print(lamda.requires_grad)
         mu = self.mu_list[layer]
+        # print(mu.requires_grad)
 
         alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
+        # print(alpha.requires_grad)
         try:
             X_plus = torch.inverse(X.t() @ X) @ X.t()
         except Exception as e:
             print(e)
             print(X.shape, X.t().shape)
-            temp = X.t() @ X
-            for i in range(len(temp)):
-                print(i)
-                print(temp[i, i])
+            print(X, X.t(), X.t() @ X, sep = '\n')
             return None
+        # print(X_plus.requires_grad)
 
         for _ in range(self.hubreg_iters):
             r = y - (X @ beta)
+            # print(r.requires_grad)
             tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
+            # print(tau.requires_grad)
             sigma = tau * lamda
+            # print(sigma.requires_grad)
             delta = X_plus @ (self.hub_deriv(r / sigma, c).unsqueeze(1) * sigma)
+            # print(delta.requires_grad)
             beta = beta + (mu * delta)
+            # print(beta.requires_grad)
 
-        return beta.clone().detach()
+        # Return the result and attach gradients
+        return beta.clone().cpu().detach()
 
     def hubregu(self, tup_arg):
         # beta: (1, r), X: (r, i_j), y: (1, i_j)
 
         beta, X, y, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
+        # print(f'in U: beta.shape: {beta.shape}, X.shape: {X.shape}, y.shape: {y.shape}')
 
+        # Detach parameters before using them in the function
         sigma = self.sigma
-        c = self.c_list[layer].clone().detach()
+        c = self.c_list[layer].clone().cpu().detach()
         lamda = self.lamda_list[layer]
         mu = self.mu_list[layer]
 
@@ -100,7 +113,8 @@ class Huber(nn.Module):
             delta = (self.hub_deriv(r / sigma, c).unsqueeze(0) * sigma) @ X_plus
             beta = beta + (mu * delta) # (1, r)
 
-        return beta.clone().detach()
+        # Return the result and attach gradients
+        return beta.clone().cpu().detach()
 
     def forward(self, X):
         # runs Algorithm 1 from Robust M-Estimation Based Matrix Completion
@@ -117,3 +131,11 @@ class Huber(nn.Module):
                 columns = self.get_rows(X[i, :]) # column indices for ith row
                 U[i:i+1, :] = self.hubregu((U[i:i+1, :], V[:, columns], X[i:i+1, columns], layer))
         return U @ V
+    
+    def getexp_LS(self):
+
+        c_list = [c.cpu().detach().item() for c in self.c_list]
+        lamda_list = [lamda.cpu().detach().item() for lamda in self.lamda_list]
+        mu_list = [mu.cpu().detach().item() for mu in self.mu_list]
+        
+        return c_list, lamda_list, mu_list
