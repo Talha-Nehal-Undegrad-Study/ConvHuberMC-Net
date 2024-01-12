@@ -1,8 +1,14 @@
 import numpy as np
 import torch
 from torch import nn
+from torch.autograd import Variable
 import scipy.stats as stats
 import concurrent.futures
+
+def to_var(X, CalInGPU):
+    if CalInGPU and torch.cuda.is_available():
+        X = X.cuda()
+    return Variable(X)
 
 class Huber(nn.Module):
     def __init__(self, params):
@@ -10,15 +16,20 @@ class Huber(nn.Module):
 
         self.n1, self.n2 = params['size1'], params['size2']
         self.rank = params['rank']
-        self.U = torch.randn(self.n1, self.rank, requires_grad = True).to(device)
-        self.V = torch.randn(self.rank, self.n2, requires_grad = True).to(device)
+
+        self.device = params['device']
+        self.CalInGPU = params['CalInGPU']
+
+        self.U = torch.randn(self.n1, self.rank).to(self.device)
+        self.V = torch.randn(self.rank, self.n2).to(self.device)
 
         self.hubreg_iters = params['hubreg_iters']
         self.layers = params['layers']
-        self.sigma = torch.tensor(params['initial_sigma']).to(device)
-        c_list = (torch.ones(self.layers) * torch.tensor(params['initial_c'])).to(device)
-        lamda_list = (torch.ones(self.layers) * torch.tensor(params['initial_lamda'])).to(device)
-        mu_list = (torch.ones(self.layers) * torch.tensor(params['initial_mu'])).to(device)
+        self.sigma = torch.tensor(params['initial_sigma']).to(self.device)
+        
+        c_list = (torch.ones(self.layers) * torch.tensor(params['initial_c'])).to(self.device)
+        lamda_list = (torch.ones(self.layers) * torch.tensor(params['initial_lamda'])).to(self.device)
+        mu_list = (torch.ones(self.layers) * torch.tensor(params['initial_mu'])).to(self.device)
 
         # learnables
         self.c_list = nn.ParameterList([nn.Parameter(c) for c in c_list])
@@ -50,6 +61,7 @@ class Huber(nn.Module):
         sigma = self.sigma
         # print(sigma.requires_grad)
         c = self.c_list[layer].clone().cpu().detach()
+        # c = self.c_list[layer]
         # print(c.requires_grad)
         lamda = self.lamda_list[layer]
         # print(lamda.requires_grad)
@@ -59,11 +71,15 @@ class Huber(nn.Module):
         alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
         # print(alpha.requires_grad)
         try:
-            X_plus = torch.inverse(X.t() @ X) @ X.t()
+            X_plus = torch.linalg.pinv(X)
         except Exception as e:
             print(e)
-            print(X.shape, X.t().shape)
-            print(X, X.t(), X.t() @ X, sep = '\n')
+            # print(X.shape, X.t().shape)
+            # print(X, X.t(), X.t() @ X, sep = '\n')
+            # temp = X.t() @ X
+            # for i in range(len(temp)):
+            #     print(i)
+            #     print(temp[i, i])
             return None
         # print(X_plus.requires_grad)
 
@@ -80,8 +96,10 @@ class Huber(nn.Module):
             # print(beta.requires_grad)
 
         # Return the result and attach gradients
+        # print(f'Learnable c: {self.c_list[layer].requires_grad}, Learnable lamda: {self.lamda_list[layer].requires_grad}, Learnable mu: {self.mu_list[layer].requires_grad}')
         return beta.clone().cpu().detach()
-
+        # return beta
+    
     def hubregu(self, tup_arg):
         # beta: (1, r), X: (r, i_j), y: (1, i_j)
 
@@ -91,19 +109,20 @@ class Huber(nn.Module):
         # Detach parameters before using them in the function
         sigma = self.sigma
         c = self.c_list[layer].clone().cpu().detach()
+        # c = self.c_list[layer]
         lamda = self.lamda_list[layer]
         mu = self.mu_list[layer]
 
         alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
         try:
-            X_plus = torch.inverse(X.t() @ X) @ X.t()
+            X_plus = torch.linalg.pinv(X)
         except Exception as e:
             print(e)
-            print(X.shape, X.t().shape)
-            temp = X.t() @ X
-            for i in range(len(temp)):
-                print(i)
-                print(temp[i, i])
+            # print(X.shape, X.t().shape)
+            # temp = X.t() @ X
+            # for i in range(len(temp)):
+            #     print(i)
+            #     print(temp[i, i])
             return None
         
         for _ in range(self.hubreg_iters):
@@ -114,7 +133,9 @@ class Huber(nn.Module):
             beta = beta + (mu * delta) # (1, r)
 
         # Return the result and attach gradients
+        # print(f'Learnable c: {self.c_list[layer].requires_grad}, Learnable lamda: {self.lamda_list[layer].requires_grad}, Learnable mu: {self.mu_list[layer].requires_grad}')
         return beta.clone().cpu().detach()
+        # return beta
 
     def forward(self, X):
         # runs Algorithm 1 from Robust M-Estimation Based Matrix Completion
@@ -125,11 +146,11 @@ class Huber(nn.Module):
         for layer in range(self.layers):
             for j in range(V.shape[1]):
                 rows = self.get_rows(X[:, j]) # row indices for jth column
-                V[:, j:j+1] = self.hubregv((V[:, j:j+1], U[rows, :], X[rows, j:j+1], layer))
+                V[:, j: j + 1] = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], layer))
 
             for i in range(U.shape[0]):
                 columns = self.get_rows(X[i, :]) # column indices for ith row
-                U[i:i+1, :] = self.hubregu((U[i:i+1, :], V[:, columns], X[i:i+1, columns], layer))
+                U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], layer))
         return U @ V
     
     def getexp_LS(self):

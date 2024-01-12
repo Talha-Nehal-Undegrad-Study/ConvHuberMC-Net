@@ -33,7 +33,7 @@ def make_session(q, db, new_entry, hyper_param_net, session_no):
   dir = make_dir(q, db, new_entry, hyper_param_net)
 
   # Now make a session corresponding to whichever try is going on currently
-  session_dir = dir + '/' + session_no + '/'
+  session_dir = dir + '/' + session_no
   os.makedirs(session_dir, exist_ok = True)
 
   return session_dir
