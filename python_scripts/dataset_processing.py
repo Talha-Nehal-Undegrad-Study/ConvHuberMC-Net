@@ -69,9 +69,9 @@ def get_dataloaders(params_net, hyper_param_net, sampling_rate, db):
     format_data.format(M_train, M_Omega_train, M_test, M_Omega_test)
 
     # Create DataLoaders
-    train_dataset = ImageDataset(40, (150, 300), 0)
+    train_dataset = ImageDataset(40, (params_net['size1'], params_net['size2']), 0)
     train_loader = data.DataLoader(train_dataset, batch_size = 5, shuffle = True)
-    test_dataset = ImageDataset(20, (150, 300), 1)
+    test_dataset = ImageDataset(20, (params_net['size1'], params_net['size2']), 1)
     test_loader = data.DataLoader(test_dataset, batch_size = 5)
 
     return train_loader, test_loader

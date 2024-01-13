@@ -137,21 +137,29 @@ class Huber(nn.Module):
         return beta.clone().cpu().detach()
         # return beta
 
-    def forward(self, X):
+    def forward(self, X, row, col):
         # runs Algorithm 1 from Robust M-Estimation Based Matrix Completion
 
         U = self.U.clone().detach()
         V = self.V.clone().detach()
 
-        for layer in range(self.layers):
-            for j in range(V.shape[1]):
-                rows = self.get_rows(X[:, j]) # row indices for jth column
-                V[:, j: j + 1] = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], layer))
+        # for layer in range(self.layers):
+        #     for j in range(V.shape[1]):
+        #         rows = self.get_rows(X[:, j]) # row indices for jth column
+        #         V[:, j: j + 1] = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], layer))
 
-            for i in range(U.shape[0]):
-                columns = self.get_rows(X[i, :]) # column indices for ith row
-                U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], layer))
-        return U @ V
+        #     for i in range(U.shape[0]):
+                # columns = self.get_rows(X[i, :]) # column indices for ith row
+                # U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], layer))
+        # return U @ V
+        for layer in range(self.layers):
+            rows = self.get_rows(X[:, col])
+            tensor_col = self.hubregv((V[:, col: col + 1], U[rows, :], X[rows, col: col + 1], layer))
+
+            columns = self.get_rows(X[row, :]) # column indices for ith row
+            tensor_row = self.hubregu((U[row: row + 1, :], V[:, columns], X[row: row + 1, columns], layer))
+
+        return tensor_row @ tensor_col
     
     def getexp_LS(self):
 

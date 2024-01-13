@@ -1,4 +1,5 @@
 import torch
+from torch.autograd import Variable
 
 # try:
 #     import hubermc, dataset_processing, logs_and_results, training
@@ -70,6 +71,7 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
   # Initalize loss for lowrank matrices which will be calculated per batch for each epoch
   loss_mean = 0
   loss_lowrank_mean = 0
+  # loss_fn.requires_grad = True
 
   for _, (D, L) in enumerate(dataloader):
     # set the gradients to zero at the beginning of each epoch
@@ -79,13 +81,20 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
             inputs = D[mat].to(device)
             targets_L = L[mat].to(device)
             # Forward + backward + loss
-            outputs_L = model(inputs)
-            # Current loss
-            loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
-            loss.requires_grad = True
-            # loss_lowrank = (loss_fn(outputs_L,targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
-            loss_mean += loss.item()
-            # loss_lowrank_mean += loss_lowrank.item()
+            for i in range(targets_L.shape[0]):
+               for j in range(targets_L.shape[1]):
+                  output_ij = model(inputs, i, j)
+                  # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
+                  loss = loss_fn(output_ij.clone().detach().requires_grad_(True), targets_L[i][j].clone().detach().requires_grad_(True))/torch.square(torch.norm(targets_L, p = 'fro'))
+                  loss_mean += loss.item()
+            loss = Variable(loss, requires_grad = True)
+            # outputs_L = model(inputs)
+            # # Current loss
+            # loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
+            # loss.requires_grad = True
+            # # loss_lowrank = (loss_fn(outputs_L,targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
+            # loss_mean += loss.item()
+            # # loss_lowrank_mean += loss_lowrank.item()
             if not inference:
               loss.backward()
     if not inference:
@@ -99,7 +108,7 @@ def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
   device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
   model.eval()
-  loss_val_mean, loss_val_lowrank_mean = 0, 0
+  loss_val_mean = 0
 
   # Validation
   with torch.no_grad():
