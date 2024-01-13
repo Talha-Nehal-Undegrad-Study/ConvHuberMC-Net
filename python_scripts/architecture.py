@@ -143,6 +143,8 @@ class Huber(nn.Module):
         U = self.U.clone().detach()
         V = self.V.clone().detach()
 
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         # for layer in range(self.layers):
         #     for j in range(V.shape[1]):
         #         rows = self.get_rows(X[:, j]) # row indices for jth column
@@ -159,7 +161,7 @@ class Huber(nn.Module):
             columns = self.get_rows(X[row, :]) # column indices for ith row
             tensor_row = self.hubregu((U[row: row + 1, :], V[:, columns], X[row: row + 1, columns], layer))
 
-        return tensor_row @ tensor_col
+        return (tensor_row @ tensor_col).squeeze().to(device)
     
     def getexp_LS(self):
 

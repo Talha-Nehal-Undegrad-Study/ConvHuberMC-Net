@@ -85,7 +85,7 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
                for j in range(targets_L.shape[1]):
                   output_ij = model(inputs, i, j)
                   # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
-                  loss = loss_fn(output_ij.clone().detach().requires_grad_(True), targets_L[i][j].clone().detach().requires_grad_(True))/torch.square(torch.norm(targets_L, p = 'fro'))
+                  loss = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
                   loss_mean += loss.item()
             loss = Variable(loss, requires_grad = True)
             # outputs_L = model(inputs)
@@ -116,12 +116,13 @@ def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
       for mat in range(batch):
         inputs = D[mat].to(device)   # "mat"th picture
         targets_L = L[mat].to(device)
-        outputs = model(inputs)  # Forward
-        # Current loss
-        loss_val = loss_fn(outputs, targets_L)/torch.square(torch.norm(targets_L, p = 'fro'))
-        # loss_val_lowrank = loss_fn(outputs, targets_L)/torch.square(torch.norm(targets_L, p = 'fro'))
-        loss_val_mean += loss_val.item()
-        # loss_val_lowrank_mean += loss_val_lowrank.item()
+
+        for i in range(targets_L.shape[0]):
+          for j in range(targets_L.shape[1]):
+            output_ij = model(inputs, i, j)
+            # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
+            loss_val = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
+            loss_val_mean += loss_val.item()
 
   loss_val_mean = loss_val_mean/ValInstances
   # loss_val_lowrank_mean = loss_val_lowrank_mean/ValInstances
