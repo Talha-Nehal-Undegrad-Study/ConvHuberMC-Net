@@ -86,18 +86,18 @@ class Huber(nn.Module):
         for _ in range(self.hubreg_iters):
             r = y - (X @ beta)
             # print(r.requires_grad)
-            tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / sigma, self.c_list[layer])) / ((2 * len(y) * alpha)**0.5)
             # print(tau.requires_grad)
             sigma = tau * lamda
             # print(sigma.requires_grad)
-            delta = X_plus @ (self.hub_deriv(r / sigma, c).unsqueeze(1) * sigma)
+            delta = X_plus @ (self.hub_deriv(r / sigma, self.c_list[layer]).unsqueeze(1) * sigma)
             # print(delta.requires_grad)
             beta = beta + (mu * delta)
             # print(beta.requires_grad)
 
         # Return the result and attach gradients
         # print(f'Learnable c: {self.c_list[layer].requires_grad}, Learnable lamda: {self.lamda_list[layer].requires_grad}, Learnable mu: {self.mu_list[layer].requires_grad}')
-        return beta.clone().cpu().detach()
+        return beta
         # return beta
     
     def hubregu(self, tup_arg):
@@ -127,21 +127,21 @@ class Huber(nn.Module):
         
         for _ in range(self.hubreg_iters):
             r = y - (beta @ X) # (1, j_i)
-            tau = torch.norm(self.hub_deriv(r / sigma, c)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / sigma, self.c_list[layer])) / ((2 * len(y) * alpha)**0.5)
             sigma = tau * lamda
-            delta = (self.hub_deriv(r / sigma, c).unsqueeze(0) * sigma) @ X_plus
+            delta = (self.hub_deriv(r / sigma, self.c_list[layer]).unsqueeze(0) * sigma) @ X_plus
             beta = beta + (mu * delta) # (1, r)
 
         # Return the result and attach gradients
         # print(f'Learnable c: {self.c_list[layer].requires_grad}, Learnable lamda: {self.lamda_list[layer].requires_grad}, Learnable mu: {self.mu_list[layer].requires_grad}')
-        return beta.clone().cpu().detach()
+        return beta
         # return beta
 
     def forward(self, X, row, col):
         # runs Algorithm 1 from Robust M-Estimation Based Matrix Completion
 
-        U = self.U.clone().detach()
-        V = self.V.clone().detach()
+        # U = self.U.clone().detach()
+        # V = self.V.clone().detach()
 
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -154,12 +154,13 @@ class Huber(nn.Module):
                 # columns = self.get_rows(X[i, :]) # column indices for ith row
                 # U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], layer))
         # return U @ V
+
         for layer in range(self.layers):
             rows = self.get_rows(X[:, col])
-            tensor_col = self.hubregv((V[:, col: col + 1], U[rows, :], X[rows, col: col + 1], layer))
+            tensor_col = self.hubregv((self.V[:, col: col + 1], self.U[rows, :], X[rows, col: col + 1], layer))
 
             columns = self.get_rows(X[row, :]) # column indices for ith row
-            tensor_row = self.hubregu((U[row: row + 1, :], V[:, columns], X[row: row + 1, columns], layer))
+            tensor_row = self.hubregu((self.U[row: row + 1, :], self.V[:, columns], X[row: row + 1, columns], layer))
 
         return (tensor_row @ tensor_col).squeeze().to(device)
     
