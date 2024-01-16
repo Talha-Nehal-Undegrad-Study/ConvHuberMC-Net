@@ -1,6 +1,8 @@
 import torch
 from torch.autograd import Variable
-
+from graphviz import Digraph
+# make_dot was moved to https://github.com/szagoruyko/pytorchviz
+from torchviz import make_dot
 # try:
 #     import hubermc, dataset_processing, logs_and_results, training
 # except ImportError:
@@ -36,7 +38,7 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
         print('Instantiating Model...\n')
         log.write('Instantiating Model...\n')
         if hyper_param_net['Model'] == 'HuberMC-Net':
-            net = architecture.Huber(params_net)
+            net = architecture.UnfoldedNet_Huber(params_net)
             print('Model Instantiated...\n')
             log.write('Model Instantiated...\n')
 
@@ -46,7 +48,7 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
         if hyper_param_net['Model'] == 'HuberMC-Net':
             if load_frm == 'state_dict':
                 torch.autograd.set_detect_anomaly(True)
-                net = architecture.Huber(params_net)
+                net = architecture.UnfoldedNet_Huber(params_net)
                 state_dict = torch.load(path_dict, map_location = 'cpu')
                 net.load_state_dict(state_dict)
                 print('Model loaded from state dict...\n')
@@ -81,22 +83,25 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
             inputs = D[mat].to(device)
             targets_L = L[mat].to(device)
             # Forward + backward + loss
-            for i in range(targets_L.shape[0]):
-               for j in range(targets_L.shape[1]):
-                  output_ij = model(inputs, i, j)
-                  # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
-                  loss = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
-                  loss_mean += loss.item()
-            loss = Variable(loss, requires_grad = True)
-            # outputs_L = model(inputs)
+            # for i in range(targets_L.shape[0]):
+            #    for j in range(targets_L.shape[1]):
+            #       output_ij = model(inputs, i, j)
+            #       # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
+            #       loss = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
+            #       loss_mean += loss.item()
+            # loss = Variable(loss, requires_grad = True)
+            outputs_L = model(inputs)
+            # print(f'Output: {outputs_L}')
             # # Current loss
-            # loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
+            loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
             # loss.requires_grad = True
+            loss = Variable(loss, requires_grad = True)
             # # loss_lowrank = (loss_fn(outputs_L,targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
-            # loss_mean += loss.item()
+            loss_mean += loss.item()
             # # loss_lowrank_mean += loss_lowrank.item()
             if not inference:
               loss.backward()
+            print(make_dot(model.c[0]).view())
     if not inference:
         optimizer.step()
   loss_mean = loss_mean/TrainInstances
@@ -117,12 +122,15 @@ def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
         inputs = D[mat].to(device)   # "mat"th picture
         targets_L = L[mat].to(device)
 
-        for i in range(targets_L.shape[0]):
-          for j in range(targets_L.shape[1]):
-            output_ij = model(inputs, i, j)
-            # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
-            loss_val = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
-            loss_val_mean += loss_val.item()
+        # for i in range(targets_L.shape[0]):
+        #   for j in range(targets_L.shape[1]):
+        #     output_ij = model(inputs, i, j)
+        #     # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
+        #     loss_val = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
+        #     loss_val_mean += loss_val.item()
+        outputs_L = model(inputs)
+        loss_val = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
+        loss_val_mean += loss_val.item()
 
   loss_val_mean = loss_val_mean/ValInstances
   # loss_val_lowrank_mean = loss_val_lowrank_mean/ValInstances
