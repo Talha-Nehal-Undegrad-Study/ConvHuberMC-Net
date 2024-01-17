@@ -167,8 +167,9 @@ class UnfoldedNet_Huber(nn.Module):
         self.rank = params['rank']
         self.iter = params['hubreg_iters']
 
-        self.U = torch.ones(self.n1, self.rank)
-        self.V = torch.ones(self.rank, self.n2)
+        self.U = torch.randn(self.n1, self.rank)
+        self.V = torch.randn(self.rank, self.n2)
+        
         # self.model_denoise = model_denoise
 
         self.c = to_var(torch.ones(self.layers) * torch.tensor(params['initial_c']), self.CalInGPU)
