@@ -74,39 +74,24 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
   loss_mean = 0
   loss_lowrank_mean = 0
   # loss_fn.requires_grad = True
-
+  optimizer.zero_grad()
   for _, (D, L) in enumerate(dataloader):
     # set the gradients to zero at the beginning of each epoch
-    # optimizer.zero_grad()
-    with torch.autograd.set_detect_anomaly(False):
+    with torch.autograd.set_detect_anomaly(True):
         for mat in range(batch):
+            
             inputs = D[mat].to(device)
             targets_L = L[mat].to(device)
-            # Forward + backward + loss
-            # for i in range(targets_L.shape[0]):
-            #    for j in range(targets_L.shape[1]):
-            #       output_ij = model(inputs, i, j)
-            #       # loss = loss_fn(torch.tensor(output_ij.item()), torch.tensor(targets_L[i][j]))/torch.square(torch.norm(targets_L, p = 'fro'))
-            #       loss = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
-            #       loss_mean += loss.item()
-            # loss = Variable(loss, requires_grad = True)
             outputs_L = model(inputs)
-            # print(f'Output: {outputs_L}')
-            # # Current loss
             loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
-            # loss.requires_grad = True
-            loss = Variable(loss, requires_grad = True)
-            # # loss_lowrank = (loss_fn(outputs_L,targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
-            loss_mean += loss.item()
-            # # loss_lowrank_mean += loss_lowrank.item()
+  
             if not inference:
-              optimizer.zero_grad()
               loss.backward()
-              optimizer.step()
-              # optimizer.zero_grad()
-            # print(make_dot(model.c[0]).view())
-    # if not inference:
-    #     optimizer.step()
+              # print(loss.grad)
+
+            loss_mean += loss.item()
+    if not inference:
+        optimizer.step()
   loss_mean = loss_mean/TrainInstances
   # loss_lowrank_mean = loss_lowrank_mean/TrainInstances
 

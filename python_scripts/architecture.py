@@ -23,8 +23,11 @@ class Huber(nn.Module):
         self.sigma = sigma
         
         self.c = nn.Parameter(c)
+        # print(f'self.c: {self.c}')
         self.lamda = nn.Parameter(lamda)
+        # print(f'self.lamda: {self.lamda}')
         self.mu = nn.Parameter(mu)
+        # print(f'self.mu: {self.mu}')
         
         # self.c_list = nn.Parameter(torch.tensor(self.layers * [params['initial_c']]).to(self.device))
         # print(self.c_list)
@@ -48,8 +51,10 @@ class Huber(nn.Module):
 
     def hub_deriv(self, x):
         # returns the derivative of Equation 2 from Block-Wise Minimization-Majorization Algorithm for Huber'S Criterion: Sparse Learning And Applications
-
-        return torch.cat((x[abs(x) <= self.c.item()], self.c.item() * torch.sign(x[abs(x) > self.c.item()])))
+        abs_x = torch.abs(x)
+        # print(abs_x, self.c)
+        deriv = x * (abs_x <= self.c) + self.c * torch.sign(x) * (abs_x > self.c)
+        return deriv
 
     def hubregv(self, tup_arg):
         # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
@@ -58,10 +63,10 @@ class Huber(nn.Module):
         # print(f'in V: beta.shape: {beta.shape}, X.shape: {X.shape}, y.shape: {y.shape}')
 
         # print(sigma.requires_grad)
-        c = self.c.clone().cpu().detach()
+        # c = self.c.clone().cpu().detach()
+        # alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
+        alpha = 0.32933136656447193
 
-        alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
-        # print(alpha.requires_grad)
         try:
             X_plus = torch.linalg.pinv(X)
         except Exception as e:
@@ -74,17 +79,16 @@ class Huber(nn.Module):
             #     print(temp[i, i])
             return None
         # print(X_plus.requires_grad)
-
         for _ in range(self.hubreg_iters):
-            r = y - (X @ beta)
+            dummy_beta = beta.clone()
+            r = y - (torch.matmul(X, dummy_beta))
             # print(r.requires_grad)
             tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
-            # print(tau.requires_grad)
             self.sigma = tau * self.lamda
             # print(sigma.requires_grad)
-            delta = X_plus @ (self.hub_deriv(r / self.sigma).unsqueeze(1) * self.sigma)
+            delta = X_plus @ (self.hub_deriv(r / self.sigma) * self.sigma)
             # print(delta.requires_grad)
-            beta = beta + (self.mu * delta)
+            beta = dummy_beta + (self.mu * delta)
             # print(beta.requires_grad)
 
         # Return the result and attach gradients
@@ -99,12 +103,13 @@ class Huber(nn.Module):
         # print(f'in U: beta.shape: {beta.shape}, X.shape: {X.shape}, y.shape: {y.shape}')
 
         # Detach parameters before using them in the function
-        sigma = self.sigma
-        c = self.c.clone().cpu().detach()
+        # c = self.c.clone().cpu().detach()
+        # alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
+        alpha = 0.32933136656447193
 
-        alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
         try:
             X_plus = torch.linalg.pinv(X)
+            
         except Exception as e:
             print(e)
             # print(X.shape, X.t().shape)
@@ -115,14 +120,22 @@ class Huber(nn.Module):
             return None
         
         for _ in range(self.hubreg_iters):
-            r = y - (beta @ X) # (1, j_i)
+
+            dummy_beta = beta.clone()            
+            r = y - (torch.matmul(dummy_beta, X)) # (1, j_i)
+            
             tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
+            
             sigma = tau * self.lamda
-            delta = (self.hub_deriv(r / sigma).unsqueeze(0) * self.sigma) @ X_plus
-            beta = beta + (self.mu * delta) # (1, r)
+            
+            delta = (self.hub_deriv(r / sigma) * self.sigma) @ X_plus
+            
+            beta = dummy_beta + (self.mu * delta) # (1, r)
+            
 
         # Return the result and attach gradients
         # print(f'Learnable c: {self.c_list[layer].requires_grad}, Learnable lamda: {self.lamda_list[layer].requires_grad}, Learnable mu: {self.mu_list[layer].requires_grad}')
+        
         return beta
         # return beta
 
@@ -172,11 +185,16 @@ class UnfoldedNet_Huber(nn.Module):
         
         # self.model_denoise = model_denoise
 
-        self.c = to_var(torch.ones(self.layers) * torch.tensor(params['initial_c']), self.CalInGPU)
-        self.lamda = to_var(torch.ones(self.layers) * torch.tensor(params['initial_lamda']), self.CalInGPU)
-        self.mu = to_var(torch.ones(self.layers) * torch.tensor(params['initial_mu']), self.CalInGPU)
+        # self.c = to_var((torch.ones(self.layers) * torch.tensor(params['initial_c'])), self.CalInGPU)
+        # self.lamda = to_var(torch.ones(self.layers) * torch.tensor(params['initial_lamda']), self.CalInGPU)
+        # self.mu = to_var(torch.ones(self.layers) * torch.tensor(params['initial_mu']), self.CalInGPU)
 
-        self.sigma = to_var(torch.tensor(params['initial_sigma']), self.CalInGPU)
+        self.c = (torch.ones(self.layers) * torch.tensor(params['initial_c']))
+        # print(f'unfoldedc: {self.c}')
+        self.lamda = (torch.ones(self.layers) * torch.tensor(params['initial_lamda']))
+        self.mu = (torch.ones(self.layers) * torch.tensor(params['initial_mu']))
+
+        self.sigma = torch.tensor(params['initial_sigma'])
 
         filt = []
         for i in range(self.layers):
@@ -197,15 +215,15 @@ class UnfoldedNet_Huber(nn.Module):
 
         # Step 1: Compute Forward Pass through all the layers and predict ground truth matrix
         # print('c before call:', self.c)
-        X, U, V = self.huber_obj([X, self.U, self.V])
+        X, U, V = self.huber_obj([X, self.U.detach(), self.V.detach()])
         # print('c after call:', self.c)
 
         return U @ V
     
     def getexp_LS(self):
 
-        c_list = [c.cpu().detach().item() for c in self.c]
-        lamda_list = [lamda.cpu().detach().item() for lamda in self.lamda]
-        mu_list = [mu.cpu().detach().item() for mu in self.mu]
+        c_list = [c.clone().cpu().detach().item() for c in self.c]
+        lamda_list = [lamda.clone().cpu().detach().item() for lamda in self.lamda]
+        mu_list = [mu.clone().cpu().detach().item() for mu in self.mu]
         
         return c_list, lamda_list, mu_list
