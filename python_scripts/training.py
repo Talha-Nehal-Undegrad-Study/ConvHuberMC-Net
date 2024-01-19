@@ -74,9 +74,10 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
   loss_mean = 0
   loss_lowrank_mean = 0
   # loss_fn.requires_grad = True
-  optimizer.zero_grad()
+  
   for _, (D, L) in enumerate(dataloader):
     # set the gradients to zero at the beginning of each epoch
+    optimizer.zero_grad()
     with torch.autograd.set_detect_anomaly(True):
         for mat in range(batch):
             
@@ -87,10 +88,12 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
   
             if not inference:
               loss.backward()
-              # print(loss.grad)
+              # print(loss)
+            #   # print(loss.grad)
 
             loss_mean += loss.item()
     if not inference:
+        # loss_mean.backward()
         optimizer.step()
   loss_mean = loss_mean/TrainInstances
   # loss_lowrank_mean = loss_lowrank_mean/TrainInstances
