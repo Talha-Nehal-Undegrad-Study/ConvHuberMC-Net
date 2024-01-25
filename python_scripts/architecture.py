@@ -82,15 +82,15 @@ class Huber(nn.Module):
         for _ in range(self.hubreg_iters):
             
             dummy_beta = beta.clone()
-            # r = y - (torch.matmul(X, dummy_beta))
+            r = y - (torch.matmul(X, dummy_beta))
             # print(r.requires_grad)
-            # tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
 
-            # self.sigma = tau ** self.lamda
+            self.sigma = tau ** self.lamda
 
             # print(sigma.requires_grad)
-            # delta = X_plus @ (self.hub_deriv(r / self.sigma) * self.sigma)
-            delta = 1.2
+            delta = X_plus @ (self.hub_deriv(r / self.sigma) * self.sigma)
+            # delta = 1.2
             # print(delta.requires_grad)
             beta = dummy_beta + (self.mu * delta)
             # print(beta.requires_grad)
@@ -126,14 +126,14 @@ class Huber(nn.Module):
         for _ in range(self.hubreg_iters):
 
             dummy_beta = beta.clone()            
-            # r = y - (torch.matmul(dummy_beta, X)) # (1, j_i)
+            r = y - (torch.matmul(dummy_beta, X)) # (1, j_i)
             
-            # tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
             
-            # sigma = tau ** self.lamda
+            sigma = tau ** self.lamda
             
-            # delta = (self.hub_deriv(r / sigma) * self.sigma) @ X_plus
-            delta = 1.2
+            delta = (self.hub_deriv(r / sigma) * self.sigma) @ X_plus
+            # delta = 1.2
             beta = dummy_beta + (self.mu * delta) # (1, r)
             
 
