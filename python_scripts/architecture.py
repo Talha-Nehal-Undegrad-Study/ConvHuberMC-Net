@@ -60,6 +60,8 @@ class Huber(nn.Module):
         # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
         beta, X, y = tup_arg[0], tup_arg[1], tup_arg[2]
+
+        sigma = 0.67
         # print(f'in V: beta.shape: {beta.shape}, X.shape: {X.shape}, y.shape: {y.shape}')
 
         # print(sigma.requires_grad)
@@ -84,12 +86,12 @@ class Huber(nn.Module):
             dummy_beta = beta.clone()
             r = y - (torch.matmul(X, dummy_beta))
             # print(r.requires_grad)
-            tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / sigma)) / ((2 * len(y) * alpha)**0.5)
 
-            self.sigma = tau ** self.lamda
+            sigma = tau ** self.lamda
 
             # print(sigma.requires_grad)
-            delta = X_plus @ (self.hub_deriv(r / self.sigma) * self.sigma)
+            delta = X_plus @ (self.hub_deriv(r / sigma) * sigma)
             # delta = 1.2
             # print(delta.requires_grad)
             beta = dummy_beta + (self.mu * delta)
@@ -110,6 +112,7 @@ class Huber(nn.Module):
         # c = self.c.clone().cpu().detach()
         # alpha = ((0.5 * (c * 2) * (1 - stats.chi2.cdf(c * 2, df = 1))) + (0.5 * stats.chi2.cdf(c ** 2, df = 3)))
         alpha = 0.32933136656447193
+        sigma = 0.67
 
         try:
             X_plus = torch.linalg.pinv(X)
@@ -128,11 +131,11 @@ class Huber(nn.Module):
             dummy_beta = beta.clone()            
             r = y - (torch.matmul(dummy_beta, X)) # (1, j_i)
             
-            tau = torch.norm(self.hub_deriv(r / self.sigma)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / sigma)) / ((2 * len(y) * alpha)**0.5)
             
             sigma = tau ** self.lamda
             
-            delta = (self.hub_deriv(r / sigma) * self.sigma) @ X_plus
+            delta = (self.hub_deriv(r / sigma) * sigma) @ X_plus
             # delta = 1.2
             beta = dummy_beta + (self.mu * delta) # (1, r)
             
