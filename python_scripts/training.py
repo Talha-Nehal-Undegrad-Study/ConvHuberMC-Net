@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 from torch.autograd import Variable
 from graphviz import Digraph
 # make_dot was moved to https://github.com/szagoruyko/pytorchviz
@@ -84,9 +85,9 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
             inputs = D[mat].to(device)
             targets_L = L[mat].to(device)
             outputs_L = model(inputs)
-            # loss = (loss_fn(outputs_L, targets_L))#/torch.square(torch.norm(targets_L, p = 'fro'))
+            loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
             # loss = torch.square(torch.norm(targets_L, p = 'fro')) / loss_fn(outputs_L, targets_L)
-            loss = (loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])
+            # loss = (loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])
             # loss = ((loss_val * loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])).item()
             if not inference:
               loss.backward()
@@ -94,7 +95,7 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
             #   # print(loss.grad)
 
             # loss_mean += ((loss * loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])).item()
-              loss_mean += loss.item()
+            loss_mean += loss.item()
     if not inference:
         # loss_mean.backward()
         optimizer.step()
@@ -123,11 +124,12 @@ def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
         #     loss_val = loss_fn(output_ij, targets_L[i][j])/torch.square(torch.norm(targets_L, p = 'fro'))
         #     loss_val_mean += loss_val.item()
         outputs_L = model(inputs)
-        # loss_val = (loss_fn(outputs_L, targets_L)) #/torch.square(torch.norm(targets_L, p = 'fro'))
+        # loss_val = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
         # loss_val = torch.square(torch.norm(targets_L, p = 'fro')) / loss_fn(outputs_L, targets_L)
-        loss_val = (loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])
-        loss_val_mean += loss_val.item()
+        loss = nn.MSELoss(reduction = 'sum')
+        loss_val = (loss(outputs_L, targets_L)) / (targets_L.numel())
         # loss_val_mean += ((loss_val * loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])).item()
+        loss_val_mean += loss_val.item()
 
         # Alternative IDea:
         # loss = torch.sum(loss_fn()
