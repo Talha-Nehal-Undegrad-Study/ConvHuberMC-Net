@@ -1,9 +1,7 @@
 import torch
 from torch import nn
 from torch.autograd import Variable
-from graphviz import Digraph
 # make_dot was moved to https://github.com/szagoruyko/pytorchviz
-from torchviz import make_dot
 # try:
 #     import hubermc, dataset_processing, logs_and_results, training
 # except ImportError:

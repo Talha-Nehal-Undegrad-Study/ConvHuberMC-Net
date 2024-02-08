@@ -4,9 +4,6 @@ from torch import nn
 from torch.autograd import Variable
 import scipy.stats as stats
 import concurrent.futures
-from graphviz import Digraph
-# make_dot was moved to https://github.com/szagoruyko/pytorchviz
-from torchviz import make_dot
 
 def to_var(X, CalInGPU):
     if CalInGPU and torch.cuda.is_available():
@@ -86,7 +83,7 @@ class Huber(nn.Module):
             dummy_beta = beta.clone()
             r = y - (torch.matmul(X, dummy_beta))
             # print(r.requires_grad)
-            tau = torch.norm(self.hub_deriv(r / sigma)) / ((2 * len(y) * alpha)**0.5)
+            tau = torch.norm(self.hub_deriv(r / sigma)) / ((2 * len(y) * alpha) ** 0.5)
 
             sigma = tau ** self.lamda
 
@@ -180,6 +177,7 @@ class UnfoldedNet_Huber(nn.Module):
         super(UnfoldedNet_Huber, self).__init__()
 
         # Constructor initializes various parameters from the given parameter dictionary
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.layers = params['layers']
         self.CalInGPU = params['CalInGPU']
 
@@ -187,8 +185,8 @@ class UnfoldedNet_Huber(nn.Module):
         self.rank = params['rank']
         self.iter = params['hubreg_iters']
 
-        self.U = torch.randn(self.n1, self.rank)
-        self.V = torch.randn(self.rank, self.n2)
+        self.U = torch.randn(self.n1, self.rank).to(self.device)
+        self.V = torch.randn(self.rank, self.n2).to(self.device)
         
         # self.model_denoise = model_denoise
 
@@ -196,12 +194,12 @@ class UnfoldedNet_Huber(nn.Module):
         # self.lamda = to_var(torch.ones(self.layers) * torch.tensor(params['initial_lamda']), self.CalInGPU)
         # self.mu = to_var(torch.ones(self.layers) * torch.tensor(params['initial_mu']), self.CalInGPU)
 
-        self.c = (torch.ones(self.layers) * torch.tensor(params['initial_c']))
+        self.c = (torch.ones(self.layers) * torch.tensor(params['initial_c'])).to(self.device)
         # print(f'unfoldedc: {self.c}')
-        self.lamda = (torch.ones(self.layers) * torch.tensor(params['initial_lamda']))
-        self.mu = (torch.ones(self.layers) * torch.tensor(params['initial_mu']))
+        self.lamda = (torch.ones(self.layers) * torch.tensor(params['initial_lamda'])).to(self.device)
+        self.mu = (torch.ones(self.layers) * torch.tensor(params['initial_mu'])).to(self.device)
 
-        self.sigma = torch.tensor(params['initial_sigma'])
+        self.sigma = torch.tensor(params['initial_sigma']).to(self.device)
 
         filt = []
         for i in range(self.layers):
@@ -211,7 +209,6 @@ class UnfoldedNet_Huber(nn.Module):
                 filt.append(Huber(self.sigma, self.c[i], self.lamda[i], self.mu[i], self.iter))
         self.huber_obj = nn.Sequential(*filt)
 
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Forward Pass recieves the lowrank noisy matrix
     def forward(self, X):

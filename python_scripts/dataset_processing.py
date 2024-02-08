@@ -30,7 +30,6 @@ class ImageDataset(data.Dataset):
         if split == 0:
             for n in range(NumInstances):
                 L = np.load(ROOT + '/lowrank/train/L_mat_MC_train' + str(n + 1) + '.npy')
-                print(L.shape)
                 D = np.load(ROOT + '/groundtruth/train/ground_mat_MC_train' + str(n + 1) + '.npy')
                 # L, D = preprocess(L, D, None, None, None)
 
@@ -70,9 +69,9 @@ def get_dataloaders(params_net, hyper_param_net, sampling_rate, db):
     format_data.format(M_train, M_Omega_train, M_test, M_Omega_test)
 
     # Create DataLoaders
-    train_dataset = ImageDataset(40, (params_net['size1'], params_net['size2']), 0)
+    train_dataset = ImageDataset(hyper_param_net['TrainInstances'], (params_net['size1'], params_net['size2']), 0)
     train_loader = data.DataLoader(train_dataset, batch_size = 5, shuffle = True)
-    test_dataset = ImageDataset(20, (params_net['size1'], params_net['size2']), 1)
+    test_dataset = ImageDataset(hyper_param_net['ValInstances'], (params_net['size1'], params_net['size2']), 1)
     test_loader = data.DataLoader(test_dataset, batch_size = 5)
 
     return train_loader, test_loader
