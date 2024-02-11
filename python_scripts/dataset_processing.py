@@ -5,7 +5,7 @@ from python_scripts import generate_synthetic_data
 from python_scripts import format_data
 
 # ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
-ROOT = 'C:/Users/HP/Git/ConvHuberMC-Net/HuberMC_Data'
+# ROOT = 'C:/Users/HP/Git/ConvHuberMC-Net/HuberMC_Data'
 
 # def preprocess(L, D, size1, size2, size3):
 
@@ -18,7 +18,7 @@ ROOT = 'C:/Users/HP/Git/ConvHuberMC-Net/HuberMC_Data'
 #     return L, D
 
 class ImageDataset(data.Dataset):
-    def __init__(self, NumInstances, shape, split, transform = None):
+    def __init__(self, NumInstances, shape, split, ROOT, transform = None):
         self.shape = shape
 
         # dummy image loader
@@ -59,18 +59,18 @@ class ImageDataset(data.Dataset):
         return len(self.images_L)
 
 
-def get_dataloaders(params_net, hyper_param_net, sampling_rate, db):
+def get_dataloaders(params_net, hyper_param_net, sampling_rate, db, ROOT):
     M_train, M_Omega_train, M_test, M_Omega_test = generate_synthetic_data.generate(
         params_net['size1'], params_net['size2'], params_net['rank'], 
         hyper_param_net['TrainInstances'], hyper_param_net['ValInstances'], sampling_rate, db)
 
     # Format and Save Data
-    format_data.format(M_train, M_Omega_train, M_test, M_Omega_test)
+    format_data.format(M_train, M_Omega_train, M_test, M_Omega_test, ROOT)
 
     # Create DataLoaders
-    train_dataset = ImageDataset(hyper_param_net['TrainInstances'], (params_net['size1'], params_net['size2']), 0)
+    train_dataset = ImageDataset(hyper_param_net['TrainInstances'], (params_net['size1'], params_net['size2']), 0, ROOT)
     train_loader = data.DataLoader(train_dataset, batch_size = 5, shuffle = True)
-    test_dataset = ImageDataset(hyper_param_net['ValInstances'], (params_net['size1'], params_net['size2']), 1)
+    test_dataset = ImageDataset(hyper_param_net['ValInstances'], (params_net['size1'], params_net['size2']), 1, ROOT)
     test_loader = data.DataLoader(test_dataset, batch_size = 5)
 
     return train_loader, test_loader

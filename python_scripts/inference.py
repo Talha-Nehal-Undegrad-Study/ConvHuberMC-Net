@@ -23,7 +23,7 @@ from logs_and_results import get_current_time, get_noise_str, get_q_str, make_pr
 from training import get_hyperparameter_grid, get_model, train_step, test_step
 
 # ROOT = '/home/gcf/Desktop/Talha_Nehal Sproj/Tahir Sproj Stuff/SPROJ_ConvMC_Net/Sensor_Data'
-ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
+# ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
 
 # Another small helper function 'get_model_from_dict' which takes a model diretory and returns a model from it
 def get_model_from_dict(model_dict_path, model_obj, device):
@@ -34,10 +34,10 @@ def get_model_from_dict(model_dict_path, model_obj, device):
   # return model
   return model_obj.to(device)
 
-def make_and_store_predictions(model_dict_path, q, db, params_net, hyper_param_net, train_loader, val_loader, device, SESSION):
+def make_and_store_predictions(model_dict_path, q, db, params_net, hyper_param_net, train_loader, val_loader, device, ROOT, SESSION):
     # Get train and test dir to store predictions in
     ProjectName = 'Best_Model_Predictions' + ' ' + get_current_time() + ' ' + hyper_param_net['Model'] + ' ' + 'Sampling Rate: ' + get_q_str(q) + ' and DB ' + get_noise_str(db)
-    train_dir, test_dir = make_predictions_dir(ProjectName, q, db, 'Predictions', params_net, hyper_param_net, SESSION)
+    train_dir, test_dir = make_predictions_dir(ProjectName, q, db, 'Predictions', params_net, hyper_param_net, ROOT, SESSION)
     CalInGPU = params_net['CalInGPU']
     # Get model from dict
     # Create an instance of your model class
@@ -110,7 +110,7 @@ def find_min_train_val_loss(dict_loss):
 # Another helper function. Given a session, q, db, and the model, we get all the models made that session, perform inference on it and find best performing model of that session and then rename that
 # as 'best_model.....'
 
-def search_and_save_best_model(SESSION, params_net, q, db, model, device):
+def search_and_save_best_model(ROOT, SESSION, params_net, q, db, model, device):
 
     # Get param and hyperparam_net
     hyper_param_net = get_hyperparameter_grid(model, TrainInstances = 400, ValInstances = 68, BatchSize = 20, ValBatchSize = 4, num_epochs = 40, learning_rate = 0.012)
@@ -152,7 +152,7 @@ def search_and_save_best_model(SESSION, params_net, q, db, model, device):
     best_model_path = (list(dict_loss.keys()))[min_loss_index]
     
     # Finding the best performing model, we move on to storing its predictions on the train and test dataset as per our 'make_and_store_predictions' function
-    make_and_store_predictions(best_model_path, q, db, params_net, hyper_param_net, train_loader, val_loader, device, SESSION)
+    make_and_store_predictions(best_model_path, q, db, params_net, hyper_param_net, train_loader, val_loader, device, ROOT, SESSION)
     
     # Once the best models predictions are stored, we move ahead with storing the model as a 'best_model' for better reference
     source_dir = os.path.dirname(best_model_path)
