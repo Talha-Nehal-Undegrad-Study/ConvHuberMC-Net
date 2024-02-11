@@ -4,8 +4,9 @@ import torch.utils.data as data
 from python_scripts import generate_synthetic_data
 from python_scripts import format_data
 
-ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
-# ROOT = 'C:/Users/HP/Documents/GitHub/ConvHuberMC-Net/HuberMC_Data'
+# ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
+ROOT = 'C:/Users/HP/Git/ConvHuberMC-Net/HuberMC_Data'
+
 # def preprocess(L, D, size1, size2, size3):
 
 #     A = max(np.max(np.abs(L)), np.max(np.abs(D)))
@@ -17,8 +18,6 @@ ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/C
 #     return L, D
 
 class ImageDataset(data.Dataset):
-
-
     def __init__(self, NumInstances, shape, split, transform = None):
         self.shape = shape
 

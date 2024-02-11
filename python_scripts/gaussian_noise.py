@@ -1,4 +1,3 @@
-
 import numpy as np
 
 def gaussian_noise(signal, model, SNR):
