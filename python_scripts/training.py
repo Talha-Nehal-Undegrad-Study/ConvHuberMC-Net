@@ -11,7 +11,7 @@ from torch.autograd import Variable
 #     sys.path.append('py_scripts')
 #     import hubermc, dataset_processing, logs_and_results, training
 
-from python_scripts import architecture
+from python_scripts import revised_architecture
 
 def get_hyperparameter_grid(Model, TrainInstances, ValInstances, BatchSize, ValBatchSize, num_epochs, learning_rate):
     hyper_param = {}
@@ -37,7 +37,7 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
         print('Instantiating Model...')
         log.write('Instantiating Model...\n')
         if hyper_param_net['Model'] == 'HuberMC-Net':
-            net = architecture.UnfoldedNet_Huber(params_net)
+            net = revised_architecture.UnfoldedNet_Huber(params_net)
             print('Model Instantiated...')
             log.write('Model Instantiated...\n')
 
@@ -47,7 +47,7 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
         if hyper_param_net['Model'] == 'HuberMC-Net':
             if load_frm == 'state_dict':
                 torch.autograd.set_detect_anomaly(True)
-                net = architecture.UnfoldedNet_Huber(params_net)
+                net = revised_architecture.UnfoldedNet_Huber(params_net)
                 state_dict = torch.load(path_dict, map_location = 'cpu')
                 net.load_state_dict(state_dict)
                 print('Model loaded from state dict...')

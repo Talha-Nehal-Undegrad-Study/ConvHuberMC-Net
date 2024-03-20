@@ -69,6 +69,9 @@ class Huber(nn.Module):
         X_plus = torch.linalg.pinv(X) # (r, j_i)
         X_plus_conv = conv_op(X_plus)
 
+        # # Normalize the matrix by its infinity norm
+        X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
+
 
         # For inital estimate beta: might consider nearest neighbour filling thingy
 
@@ -101,6 +104,11 @@ class Huber(nn.Module):
 
         X_plus = torch.linalg.pinv(X) # (i_j, r)
         X_plus_conv = conv_op(X_plus)
+
+        # norm_value = torch.norm(X_plus_conv, p = 2)
+
+        # # Normalize the matrix by its infinity norm
+        X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
         
         r = y - torch.mm(beta, X) # y - XBeta
         scale = 1.4815 * torch.median(torch.abs(r - torch.median(r)))
@@ -179,7 +187,6 @@ class UnfoldedNet_Huber(nn.Module):
 
         # Create a single ModuleList from the combined list
         self.conv_layers = nn.ModuleList(combined_conv_layers)
-        print(len(self.conv_layers))
 
         filt = []
         for i in range(self.layers):
@@ -197,15 +204,7 @@ class UnfoldedNet_Huber(nn.Module):
 
         # Step 1: Compute Forward Pass through all the layers and predict ground truth matrix
         # print('c before call:', self.c)
-        X, U, V = self.huber_obj([X, self.U.detach(), self.V.detach()])
+        X, U, V = self.huber_obj([X, self.U.clone(), self.V.clone()])
         # print('c after call:', self.c)
 
         return U @ V
-    
-    def getexp_LS(self):
-
-        c_list = [c.clone().cpu().detach().item() for c in self.c]
-        lamda_list = [lamda.clone().cpu().detach().item() for lamda in self.lamda]
-        mu_list = [mu.clone().cpu().detach().item() for mu in self.mu]
-        
-        return c_list, lamda_list, mu_list
