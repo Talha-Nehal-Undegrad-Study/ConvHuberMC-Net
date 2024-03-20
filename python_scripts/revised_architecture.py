@@ -67,10 +67,13 @@ class Huber(nn.Module):
         gamma = 2
         
         X_plus = torch.linalg.pinv(X) # (r, j_i)
-        X_plus_conv = conv_op(X_plus)
+        X_plus_conv_temp = conv_op(X_plus)
+
+        norm_value = torch.norm(X_plus_conv_temp, p = 2)
+        X_plus_conv = X_plus_conv_temp / norm_value
 
         # # Normalize the matrix by its infinity norm
-        X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
+        # X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
 
 
         # For inital estimate beta: might consider nearest neighbour filling thingy
@@ -103,12 +106,13 @@ class Huber(nn.Module):
         gamma = 2
 
         X_plus = torch.linalg.pinv(X) # (i_j, r)
-        X_plus_conv = conv_op(X_plus)
+        X_plus_conv_temp = conv_op(X_plus)
 
-        # norm_value = torch.norm(X_plus_conv, p = 2)
+        norm_value = torch.norm(X_plus_conv_temp, p = 2)
+        X_plus_conv = X_plus_conv_temp / norm_value
 
         # # Normalize the matrix by its infinity norm
-        X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
+        # X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
         
         r = y - torch.mm(beta, X) # y - XBeta
         scale = 1.4815 * torch.median(torch.abs(r - torch.median(r)))
