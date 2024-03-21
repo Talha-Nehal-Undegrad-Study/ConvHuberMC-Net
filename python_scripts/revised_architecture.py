@@ -65,12 +65,14 @@ class Huber(nn.Module):
 
         beta, X, y, conv_op = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
         gamma = 2
-        
-        X_plus = torch.linalg.pinv(X) # (r, j_i)
-        X_plus_conv_temp = conv_op(X_plus)
 
-        norm_value = torch.norm(X_plus_conv_temp, p = 2)
-        X_plus_conv = X_plus_conv_temp / norm_value
+        X_plus = torch.linalg.pinv(X) # (r, j_i)
+        X_plus_conv = conv_op(X_plus)
+        
+        # Note: The ill-condition thingy is not caused by hubregv but hubregu
+
+        # norm_value = torch.norm(X_plus_conv_temp, p = 2)
+        # X_plus_conv = X_plus_conv_temp / norm_value
 
         # # Normalize the matrix by its infinity norm
         # X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
@@ -104,12 +106,20 @@ class Huber(nn.Module):
 
         beta, X, y, conv_op = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
         gamma = 2
+        # print("U\n")
+        print(X)
+        print(X.shape)
+        # X = X.reshape(1, -1)
+        # print(X.shape)
+    
+        w, D, v = torch.linalg.svd(X)
+        print(D)
 
         X_plus = torch.linalg.pinv(X) # (i_j, r)
-        X_plus_conv_temp = conv_op(X_plus)
+        X_plus_conv = conv_op(X_plus)
 
-        norm_value = torch.norm(X_plus_conv_temp, p = 2)
-        X_plus_conv = X_plus_conv_temp / norm_value
+        # norm_value = torch.norm(X_plus_conv_temp, p = 2)
+        # X_plus_conv = X_plus_conv_temp / norm_value
 
         # # Normalize the matrix by its infinity norm
         # X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
@@ -152,6 +162,9 @@ class Huber(nn.Module):
 
         for i in range(U.shape[0]):
             columns = self.get_rows(X[i, :]) # column indices for ith row
+            print("In Forward PASS!\n")
+            print(V)
+            print("Moving Out\n")
             U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], self.conv_layers[j + i]))
         return [X, U, V]
 
