@@ -25,6 +25,16 @@ class Conv2dC(nn.Module):
             self.convR = nn.Conv2d(1, 1, (kernel[0], kernel[0]), (1, 1), (pad0, pad0), groups = 1).cuda()
         else:
             self.convR = nn.Conv2d(1, 1, (kernel[0], kernel[0]), (1, 1), (pad0, pad0), groups = 1).to('cpu')
+        
+        # Initialize weights to zero
+        self.convR.weight.data.zero_()
+
+        # For a 3x3 kernel, set the center value to 1 to approximate an identity operation
+        if kernel[0] == 3 and kernel[1] == 3:
+            self.convR.weight.data[0, 0, 1, 1] = 1
+
+        # Set bias to zero
+        self.convR.bias.data.zero_()
         # At groups = in_channels, each input channel is convolved with its own set of filters (of size out_channels/in_channels)
 
     def forward(self, x):
@@ -80,7 +90,7 @@ class Huber(nn.Module):
 
         # For inital estimate beta: might consider nearest neighbour filling thingy
 
-        r = y - torch.mm(X, beta) # y - XBeta
+        r = y - torch.matmul(X, beta) # y - XBeta
         scale = 1.4815 * torch.median(torch.abs(r - torch.median(r)))
 
         N = y.shape[0]
@@ -88,15 +98,17 @@ class Huber(nn.Module):
 
         for _ in range(self.hubreg_iters):
 
-            r = y - torch.mm(X, beta)
+            r = y - torch.matmul(X, beta)
             r_chi = psi(r / scale) * (r / scale) - rho(r / scale)
             scale = torch.sqrt(((gamma * scale ** 2) / (2 * alpha() * (N - p - 1))) * torch.sum(r_chi))
 
             r_pseu = psi(r / scale) * scale
 
-            delta = torch.mm(X_plus_conv, r_pseu)
+            delta = torch.matmul(X_plus_conv, r_pseu)
 
             beta = beta + delta
+            # beta += delta.clone()
+            # beta = beta.add(delta)
 
         return beta
 
@@ -107,13 +119,13 @@ class Huber(nn.Module):
         beta, X, y, conv_op = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
         gamma = 2
         # print("U\n")
-        print(X)
-        print(X.shape)
+        # print(X)
+        # print(X.shape)
         # X = X.reshape(1, -1)
         # print(X.shape)
     
-        w, D, v = torch.linalg.svd(X)
-        print(D)
+        # w, D, v = torch.linalg.svd(X)
+        # print(D)
 
         X_plus = torch.linalg.pinv(X) # (i_j, r)
         X_plus_conv = conv_op(X_plus)
@@ -124,7 +136,7 @@ class Huber(nn.Module):
         # # Normalize the matrix by its infinity norm
         # X_plus_conv = (X_plus_conv - X_plus_conv.min()) / (X_plus_conv.max() - X_plus_conv.min())
         
-        r = y - torch.mm(beta, X) # y - XBeta
+        r = y - torch.matmul(beta, X) # y - XBeta
         scale = 1.4815 * torch.median(torch.abs(r - torch.median(r)))
 
         N = y.shape[1]
@@ -132,15 +144,17 @@ class Huber(nn.Module):
 
         for _ in range(self.hubreg_iters):
 
-            r = y - torch.mm(beta, X)
+            r = y - torch.matmul(beta, X)
             r_chi = psi(r / scale) * (r / scale) - rho(r / scale)
             scale = torch.sqrt(((gamma * scale ** 2) / (2 * alpha() * (N - p - 1))) * torch.sum(r_chi))
 
             r_pseu = psi(r / scale) * scale
 
-            delta = torch.mm(r_pseu, X_plus_conv)
+            delta = torch.matmul(r_pseu, X_plus_conv)
 
             beta = beta + delta
+            # beta += delta.clone()
+            # beta = beta.add(delta)
 
         return beta
 
@@ -158,14 +172,20 @@ class Huber(nn.Module):
         # for layer in range(self.layers):
         for j in range(V.shape[1]):
             rows = self.get_rows(X[:, j]) # row indices for jth column
-            V[:, j: j + 1] = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], self.conv_layers[j]))
+            # V[:, j: j + 1] = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], self.conv_layers[j]))
+            new_V_col = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], self.conv_layers[j]))
+            V = torch.cat((V[:, :j], new_V_col, V[:, j + 1:]), dim = 1)
 
         for i in range(U.shape[0]):
             columns = self.get_rows(X[i, :]) # column indices for ith row
-            print("In Forward PASS!\n")
-            print(V)
-            print("Moving Out\n")
-            U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], self.conv_layers[j + i]))
+            # print("In Forward PASS!\n")
+            # print(V)
+            # print("Moving Out\n")
+            # U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], self.conv_layers[j + i]))
+            new_U_row = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], self.conv_layers[j + i]))
+            U = torch.cat((U[:i, :], new_U_row, U[i + 1:, :]), dim = 0)
+
+        # print("Forward Pass Done!")
         return [X, U, V]
 
         # # for layer in range(self.layers):
