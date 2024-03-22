@@ -82,14 +82,29 @@ def get_modularized_record(project_name, q, db, new_entry, hyper_param_net, para
         model_path = (f'{dir}/{project_name} Layers_{params_net["layers"]}_TrainInstances_{hyper_param_net["TrainInstances"]}_Epochs_[{current_epoch}_out_of_{hyper_param_net["Epochs"]}]_lr_{hyper_param_net["Lr"]}.pth')
         return model_path
 
-def plot_and_save_mse_vs_epoch(epochs_vec, lossmean_vec, lossmean_val_vec, dir):
-    fig = plt.figure(figsize = (8, 6), dpi = 100)
-    plt.plot(epochs_vec, lossmean_vec, '-*', label = 'loss')
-    plt.plot(epochs_vec, lossmean_val_vec, '-*', label = 'loss_val')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.ylim(ymin = 0)
-    plt.title("MSE")
-    plt.legend()
-    plt.grid(True)
+def plot_and_save_mse_vs_epoch(training_loss, validation_loss, dir):
+    # Data extracted from the input
+    epochs = list(range(1, len(training_loss) + 1))
+
+    # Creating plots with updated legend descriptions
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8))
+
+    # Plot training loss with updated legend
+    axs[0].plot(epochs, training_loss, 'bo-', label=r'$loss_{train} = \frac{\|M - X\|{2}^2}{\|X\|{F}^2}$')
+    axs[0].set_title('Training Loss per Epoch')
+    axs[0].set_xlabel('Epoch')
+    axs[0].set_ylabel('Mean Training Loss')
+    axs[0].grid(True)
+    axs[0].legend()
+
+    # Plot validation loss with updated legend
+    axs[1].plot(epochs, validation_loss, 'r^-', label=r'$loss_{val} = \frac{\|M - X\|_{F}^2}{n_1n_2}$')
+    axs[1].set_title('Validation Loss per Epoch')
+    axs[1].set_xlabel('Epoch')
+    axs[1].set_ylabel('Mean Validation Loss')
+    axs[1].grid(True)
+    axs[1].legend()
+
+    plt.tight_layout()
+    plt.show()
     plt.savefig(dir)
