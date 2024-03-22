@@ -10,5 +10,66 @@ Parameters =
 Loading phase...
 Finished loading.
 
+<<<<<<< HEAD
 2024-03-23 04:07:58
 
+=======
+2024-03-23 02:58:16
+
+2024-03-23 03:01:11
+
+2024-03-23 03:03:26
+
+2024-03-23 03:06:01
+
+2024-03-23 03:08:23
+
+Loading and calculating training batches...
+Training time is 101.552697Loading and calculating validation batches...
+Test time is 7.543307Epoch [5/20], Mean Training Loss:6.80299e-05, Mean Validation Loss:1.25588e+01
+saved at [epoch5/20]
+2024-03-23 03:10:12
+
+2024-03-23 03:11:57
+
+2024-03-23 03:13:49
+
+2024-03-23 03:15:36
+
+2024-03-23 03:17:12
+
+Loading and calculating training batches...
+Training time is 89.576496Loading and calculating validation batches...
+Test time is 6.507770Epoch [10/20], Mean Training Loss:6.47807e-05, Mean Validation Loss:1.24741e+01
+saved at [epoch10/20]
+2024-03-23 03:18:48
+
+2024-03-23 03:20:25
+
+2024-03-23 03:22:13
+
+2024-03-23 03:24:12
+
+2024-03-23 03:26:02
+
+Loading and calculating training batches...
+Training time is 107.755776Loading and calculating validation batches...
+Test time is 6.537275Epoch [15/20], Mean Training Loss:6.23462e-05, Mean Validation Loss:1.24236e+01
+saved at [epoch15/20]
+2024-03-23 03:27:56
+
+2024-03-23 03:29:31
+
+2024-03-23 03:32:15
+
+2024-03-23 03:33:58
+
+2024-03-23 03:35:47
+
+Loading and calculating training batches...
+Training time is 109.905278Loading and calculating validation batches...
+Test time is 8.833360Epoch [20/20], Mean Training Loss:6.03173e-05, Mean Validation Loss:1.23448e+01
+saved at [epoch20/20]
+
+Min Loss = 1.2328e+01
+>>>>>>> 3b6557aabf48696ebd84de358e421fe9bc8d1602
