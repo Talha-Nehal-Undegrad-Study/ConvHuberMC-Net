@@ -10,61 +10,61 @@ Parameters =
 Loading phase...
 Finished loading.
 
-Epoch: 1 2024-03-24 05:34:02
+Epoch: 1 2024-03-25 22:36:35
 
-Epoch: 2 2024-03-24 05:36:02
+Epoch: 2 2024-03-25 22:43:56
 
-Epoch: 3 2024-03-24 05:38:11
+Epoch: 3 2024-03-25 22:50:01
 
-Epoch: 4 2024-03-24 05:40:08
+Epoch: 4 2024-03-25 22:56:09
 
-Epoch: 5 2024-03-24 05:42:03
+Epoch: 5 2024-03-25 23:04:31
 
 Loading and calculating training batches...
-Training time is 104.411854Loading and calculating validation batches...
-Test time is 6.865830Epoch [5/20], Mean Training Loss:6.59745e-05, Mean Validation Loss:3.11802e+01
+Training time is 354.181116Loading and calculating validation batches...
+Test time is 20.982892Epoch [5/20], Mean Training Loss:6.04875e-05, Mean Validation Loss:1.15217e+01
 saved at [epoch5/20]
-Epoch: 6 2024-03-24 05:43:54
+Epoch: 6 2024-03-25 23:10:46
 
-Epoch: 7 2024-03-24 05:45:40
+Epoch: 7 2024-03-25 23:15:42
 
-Epoch: 8 2024-03-24 05:47:43
+Epoch: 8 2024-03-25 23:20:39
 
-Epoch: 9 2024-03-24 05:49:22
+Epoch: 9 2024-03-25 23:25:36
 
-Epoch: 10 2024-03-24 05:51:02
+Epoch: 10 2024-03-25 23:30:33
 
 Loading and calculating training batches...
-Training time is 93.435775Loading and calculating validation batches...
-Test time is 9.157982Epoch [10/20], Mean Training Loss:6.25473e-05, Mean Validation Loss:2.87611e+01
+Training time is 12483.282780Loading and calculating validation batches...
+Test time is 43.603328Epoch [10/20], Mean Training Loss:5.75366e-05, Mean Validation Loss:1.12722e+01
 saved at [epoch10/20]
-Epoch: 11 2024-03-24 05:52:44
+Epoch: 11 2024-03-26 02:59:19
 
-Epoch: 12 2024-03-24 05:54:32
+Epoch: 12 2024-03-26 03:05:12
 
-Epoch: 13 2024-03-24 05:56:13
+Epoch: 13 2024-03-26 03:10:30
 
-Epoch: 14 2024-03-24 05:57:52
+Epoch: 14 2024-03-26 03:16:12
 
-Epoch: 15 2024-03-24 05:59:33
+Epoch: 15 2024-03-26 03:21:15
 
 Loading and calculating training batches...
-Training time is 128.038580Loading and calculating validation batches...
-Test time is 9.555462Epoch [15/20], Mean Training Loss:6.01380e-05, Mean Validation Loss:2.53988e+01
+Training time is 265.334495Loading and calculating validation batches...
+Test time is 20.711887Epoch [15/20], Mean Training Loss:5.54551e-05, Mean Validation Loss:1.12501e+01
 saved at [epoch15/20]
-Epoch: 16 2024-03-24 06:01:51
+Epoch: 16 2024-03-26 03:26:01
 
-Epoch: 17 2024-03-24 06:04:04
+Epoch: 17 2024-03-26 03:31:44
 
-Epoch: 18 2024-03-24 06:06:14
+Epoch: 18 2024-03-26 03:37:31
 
-Epoch: 19 2024-03-24 06:08:19
+Epoch: 19 2024-03-26 03:42:32
 
-Epoch: 20 2024-03-24 06:10:32
+Epoch: 20 2024-03-26 03:47:33
 
 Loading and calculating training batches...
-Training time is 108.054597Loading and calculating validation batches...
-Test time is 6.578328Epoch [20/20], Mean Training Loss:5.81420e-05, Mean Validation Loss:2.76774e+01
+Training time is 270.690255Loading and calculating validation batches...
+Test time is 18.891776Epoch [20/20], Mean Training Loss:5.36339e-05, Mean Validation Loss:1.11607e+01
 saved at [epoch20/20]
 
-Min Loss = 1.9215e+01
+Min Loss = 1.1161e+01
