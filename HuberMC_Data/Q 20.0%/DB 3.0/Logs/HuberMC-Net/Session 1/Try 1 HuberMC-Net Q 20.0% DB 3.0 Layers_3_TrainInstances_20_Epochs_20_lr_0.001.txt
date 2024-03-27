@@ -10,10 +10,8 @@ Parameters =
 Loading phase...
 Finished loading.
 
-<<<<<<< HEAD
 2024-03-23 04:07:58
 
-=======
 2024-03-23 02:58:16
 
 2024-03-23 03:01:11
@@ -72,4 +70,3 @@ Test time is 8.833360Epoch [20/20], Mean Training Loss:6.03173e-05, Mean Validat
 saved at [epoch20/20]
 
 Min Loss = 1.2328e+01
->>>>>>> 3b6557aabf48696ebd84de358e421fe9bc8d1602
