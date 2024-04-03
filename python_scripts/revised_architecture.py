@@ -196,7 +196,7 @@ class Huber(nn.Module):
         # tensor_row = self.hubregu((self.U[row: row + 1, :], self.V[:, columns], X[row: row + 1, columns]))
 
         # return (tensor_row @ tensor_col).squeeze().to(device) # in inference, construct the matrix from these
-    
+
 class UnfoldedNet_Huber(nn.Module):
     def __init__(self, params = None, model_denoise = None):
         super(UnfoldedNet_Huber, self).__init__()
@@ -241,7 +241,158 @@ class UnfoldedNet_Huber(nn.Module):
 
         # Step 1: Compute Forward Pass through all the layers and predict ground truth matrix
         # print('c before call:', self.c)
-        X, U, V = self.huber_obj([X, self.U.clone(), self.V.clone()])
+        X, U, V = self.huber_obj([X, self.U.clone(), self.V.clone(), 0])
+        # print('c after call:', self.c)
+
+        return U @ V
+    
+
+
+class LP1(nn.Module):
+    def __init__(self, kernel, conv_layers, iter):
+        super(LP1, self).__init__()
+
+        self.inner_iter = iter
+        self.conv_layers = conv_layers
+        self.kernel = kernel
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    def findNonZeroIndices(self, M_Omega):
+        """
+        Finds the indices of non-zero elements in a matrix and
+        returns them in a specified 2x(number of non-zero elements) format.
+
+        Parameters:
+        - M_Omega: A matrix to search for non-zero elements.
+
+        Returns:
+        - array_Omega: A 2xM matrix where the first row contains the row indices and
+        the second row contains the column indices of the non-zero elements in M_Omega.
+        """
+        # Find the row and column indices of non-zero elements in M_Omega
+        row_indices, col_indices = torch.nonzero(M_Omega, as_tuple = True)
+        
+        # Combine row and column indices into the array_Omega format
+        array_Omega = torch.stack((row_indices, col_indices), dim = 0)
+
+        return array_Omega.to(self.device)
+
+    def lp1v(self, tup_arg):
+
+        beta, U_I, b_I, conv_op, layer = tup_arg
+        U_I, b_I, beta = U_I.to(self.device), b_I.to(self.device), beta.to(self.device)
+
+        if layer == 1:
+            W = torch.eye(len(b_I)).to(self.device)
+        else:
+            ksi = U_I @ beta - b_I
+            W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4))
+
+        for inner_iter in range(self.inner_iter):
+            X_plus = torch.linalg.pinv(U_I.T @ W.T @ W @ U_I)
+            X_plus_conv = conv_op(X_plus)
+            beta = X_plus_conv @ U_I.T @ W.T @ W @ b_I
+            ksi = U_I @ beta - b_I
+            W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4))
+
+        return beta
+
+    def lp1u(self, tup_arg):
+
+        beta, V_I, b_I, conv_op = tup_arg
+        beta, V_I, b_I = beta.to(self.device), V_I.to(self.device), b_I.to(self.device)
+
+        if b_I.size(0) > 0:  # Ensure b_I is not empty
+            ksi = beta @ V_I - b_I
+            W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4))
+
+            for inner_iter in range(self.inner_iter):
+                X_plus = torch.linalg.pinv(V_I @ W @ W.T @ V_I.T)
+                X_plus_conv = conv_op(X_plus)
+                beta = b_I @ W @ W.T @ V_I.T @ X_plus_conv
+                ksi = beta @ V_I - b_I
+                W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4))
+
+        return beta
+    
+    def forward(self, lst):
+        
+        X, U, V, layer = lst
+        Omega = self.findNonZeroIndices(X)
+        layer += 1
+
+        U, V = U.to(self.device), V.to(self.device)
+
+        for j in range(V.shape[1]):
+            row_indices = (Omega[1, :] == j).nonzero(as_tuple = True)[0]
+            row = Omega[0, row_indices]
+            U_I = U[row, :]
+            b_I = X[row, j]
+            beta = V[:, j]
+
+            new_V_col = self.lp1v((beta, U_I, b_I, self.conv_layers[j], layer))
+            # V = torch.cat((V[:, :j], new_V_col, V[:, j + 1:]), dim = 1)
+            V[:, j] = new_V_col.squeeze()
+
+        for i in range(U.shape[0]):
+            col_indices = (Omega[0, :] == i).nonzero(as_tuple = True)[0]
+            col = Omega[1, col_indices]
+            V_I = V[:, col]
+            b_I = X[i, col]
+            
+            beta = U[i, :]
+
+            new_U_row = self.lp1u((beta, V_I, b_I, self.conv_layers[j + i]))
+            # U = torch.cat((U[:i, :], new_U_row, U[i + 1:, :]), dim = 0)
+            U[i, :] = new_U_row.squeeze()
+
+        return [X, U, V, layer]
+
+class UnfoldedNet_LP1(nn.Module):
+    def __init__(self, params = None, model_denoise = None):
+        super(UnfoldedNet_LP1, self).__init__()
+
+        # Constructor initializes various parameters from the given parameter dictionary
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.layers = params['layers']
+        self.CalInGPU = params['CalInGPU']
+
+        self.n1, self.n2 = params['size1'], params['size2']
+        self.rank = params['rank']
+        self.iter = params['inner_iters'] # analagous to 't' in LP1 script.py
+
+        self.U = torch.randn(self.n1, self.rank).to(self.device)
+        self.V = torch.randn(self.rank, self.n2).to(self.device)
+        
+        self.kernel = params['kernel']
+        
+        # Create lists of Conv2dC instances
+        conv_layers_v = [Conv2dC(kernel = self.kernel) for _ in range(self.V.shape[1])]
+        conv_layers_u = [Conv2dC(kernel = self.kernel) for _ in range(self.U.shape[0])]
+
+        # Concatenate the two lists
+        combined_conv_layers = conv_layers_v + conv_layers_u
+
+        # Create a single ModuleList from the combined list
+        self.conv_layers = nn.ModuleList(combined_conv_layers)
+
+        filt = []
+        for i in range(self.layers):
+            filt.append(LP1(self.kernel, self.conv_layers, self.iter))
+            
+        self.lp1_obj = nn.Sequential(*filt)
+
+
+    # Forward Pass recieves the lowrank noisy matrix
+    def forward(self, X):
+
+        # Now initalize the neural architecture of even number of layers where even numbered layers correspond to updating U and odd numbered
+        # layers correspond to updating V. Each odd numbered layers will have number of nodes equal to number of rows and each even numbered
+        # column will have number of nodes equal to the number of columns. For now, same parameters either learnable or not throughout
+
+        # Step 1: Compute Forward Pass through all the layers and predict ground truth matrix
+        # print('c before call:', self.c)
+        X, U, V, layer = self.lp1_obj([X, self.U.clone(), self.V.clone(), 0])
         # print('c after call:', self.c)
 
         return U @ V

@@ -47,12 +47,12 @@ def LP1(M_Omega, Omega, rak, maxiter = 500):
 
             if len(b_I) > 0:  # Ensure b_I is not empty
                 ksi = U[i, :] @ V_I - b_I
-                W = np.diag(1 / (np.abs(ksi) ** 2 + 0.0001)**(1/4))
+                W = np.diag(1 / (np.abs(ksi) ** 2 + 0.0001) ** (1/4))
 
                 for inner_iter in range(t):
                     U[i, :] = b_I @ W @ W.T @ V_I.T @ np.linalg.pinv(V_I @ W @ W.T @ V_I.T)
                     ksi = U[i, :] @ V_I - b_I
-                    W = np.diag(1 / (np.abs(ksi)**2 + 0.0001)**(1/4))
+                    W = np.diag(1 / (np.abs(ksi) ** 2 + 0.0001)**(1/4))
 
         X = U @ V
         if iter > maxiter:

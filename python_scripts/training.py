@@ -40,6 +40,11 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
             net = revised_architecture.UnfoldedNet_Huber(params_net)
             print('Model Instantiated...')
             log.write('Model Instantiated...\n')
+        if hyper_param_net['Model'] == 'LP1-Net':
+            net = revised_architecture.UnfoldedNet_LP1(params_net)
+            print('Model Instantiated...')
+            log.write('Model Instantiated...\n')
+        
 
     else:
         print('Loading Model...')
@@ -57,6 +62,20 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
                 print('Whole model loaded...')
                 log.write('Whole model loaded...\n')
             net.eval()
+        elif hyper_param_net['Model'] == 'LP1-Net':
+            if load_frm == 'state_dict':
+                torch.autograd.set_detect_anomaly(True)
+                net = revised_architecture.UnfoldedNet_LP1(params_net)
+                state_dict = torch.load(path_dict, map_location = 'cpu')
+                net.load_state_dict(state_dict)
+                print('Model loaded from state dict...')
+                log.write('Model loaded from state dict...\n')
+            elif load_frm == 'whole_model':
+                net = torch.load(path_whole)
+                print('Whole model loaded...')
+                log.write('Whole model loaded...\n')
+            net.eval()
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     net = net.to(device)
 
