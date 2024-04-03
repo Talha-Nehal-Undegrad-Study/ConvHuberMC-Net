@@ -279,7 +279,7 @@ class LP1(nn.Module):
 
     def lp1v(self, tup_arg):
 
-        beta, U_I, b_I, conv_op, layer = tup_arg
+        beta, U_I, b_I, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4]
         U_I, b_I, beta = U_I.to(self.device), b_I.to(self.device), beta.to(self.device)
 
         if layer == 1:
@@ -299,25 +299,26 @@ class LP1(nn.Module):
 
     def lp1u(self, tup_arg):
 
-        beta, V_I, b_I, conv_op = tup_arg
+        beta, V_I, b_I, conv_op = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
         beta, V_I, b_I = beta.to(self.device), V_I.to(self.device), b_I.to(self.device)
 
         if b_I.size(0) > 0:  # Ensure b_I is not empty
-            ksi = beta @ V_I - b_I
-            W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4))
+            ksi = (beta @ V_I - b_I).clone()
+            W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4)).clone()
 
             for inner_iter in range(self.inner_iter):
                 X_plus = torch.linalg.pinv(V_I @ W @ W.T @ V_I.T)
                 X_plus_conv = conv_op(X_plus)
-                beta = b_I @ W @ W.T @ V_I.T @ X_plus_conv
-                ksi = beta @ V_I - b_I
-                W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4))
+                updated_beta = b_I @ W @ W.T @ V_I.T @ X_plus_conv
+                beta = updated_beta.clone()
+                ksi = (beta @ V_I - b_I).clone()
+                W = torch.diag(1 / (ksi.abs() ** 2 + 0.0001) ** (1 / 4)).clone()
 
         return beta
     
     def forward(self, lst):
         
-        X, U, V, layer = lst
+        X, U, V, layer = lst[0], lst[1], lst[2], lst[3]
         Omega = self.findNonZeroIndices(X)
         layer += 1
 
