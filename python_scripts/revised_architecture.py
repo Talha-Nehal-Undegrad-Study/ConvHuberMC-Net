@@ -7,6 +7,50 @@ import concurrent.futures
 
 from python_scripts.utils import psi, rho, alpha
 
+
+#  Creating a class which recives the lagrange multiplier y of shape (49, 60) and ouputs two learnable matrices W and B both of shape (49, 60) as in eq (9) of paper.
+# The process for getting the output is very similar to Conv2dC above where we add extra dimensions for convolution and then after the operation we remove those extra dimensions
+
+# class LearnableMatrices(nn.Module):
+#     def __init__(self, input_channels, output_channels):
+#         super(LearnableMatrices, self).__init__()
+#         self.conv_W = nn.Conv2d(in_channels = input_channels, out_channels = output_channels, kernel_size = 3, stride = 1, padding = 1)
+#         self.conv_B = nn.Conv2d(in_channels = input_channels, out_channels = output_channels, kernel_size = 3, stride = 1, padding = 1)
+
+#     def forward(self, y):
+#         temp = y[None, None, :, 0:y.shape[-1]]
+#         W = self.conv_W(temp)
+#         B = self.conv_B(temp)
+#         return W.squeeze(), B.squeeze()
+
+    # # Alternative to this maybe
+    # self.W = nn.Parameter(torch.ones((400, 500), device = torch.device(self.device), requires_grad = CalInGPU))
+    # self.B = nn.Parameter(torch.zeros((400, 500), device = torch.device(self.device), requires_grad = CalInGPU))
+
+
+class PseudoInverse(nn.Module):
+    def __init__(self, a, b, c):
+        super(PseudoInverse, self).__init__()
+        # Initialize W and B as learnable matrices with appropriate dimensions
+        # W has shape (c, a) and B has shape (b, c) to ensure the dot product will have shape (b, a)
+        self.W = nn.Linear(a, c, bias = False)
+        self.B = nn.Linear(c, b, bias = False)
+
+    def forward(self):
+        # Compute the dot product of W and B to approximate the pseudo-inverse
+        # The result will be of shape (b, a), assuming matrix multiplication rules
+        pseudo_inverse = self.B(self.W.weight).t()
+        return pseudo_inverse
+
+    # Example usage:
+    """
+    a = 49  # Dimension of the input matrix's height
+    b = 60  # Dimension of the input matrix's width
+    c = 50  # Intermediate dimension size
+
+    model = PseudoInverse(a, b, c)
+    """
+
 def to_var(X, CalInGPU):
     if CalInGPU and torch.cuda.is_available():
         X = X.to('cuda')
@@ -58,6 +102,10 @@ class Huber(nn.Module):
         self.conv_layers = conv_layers
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+        # Initialize W and B matrices for each column of V and each row of U
+        self.W_matrices = nn.ModuleList([PseudoInverse(a, c, b) for _ in range(max(a, b))])
+        self.B_matrices = nn.ModuleList([PseudoInverse(c, b, a) for _ in range(max(a, b))])
+
     def get_rows(self, column):
         # returns row indices of non-zero elements in column
 
@@ -75,6 +123,11 @@ class Huber(nn.Module):
 
         beta, X, y, conv_op = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
         gamma = 2
+        
+        W_matrix = self.W_matrices[some_index]
+        B_matrix = self.B_matrices[some_index]
+        X_plus_approx = torch.matmul(W_matrix(), B_matrix())
+
 
         X_plus = torch.linalg.pinv(X) # (r, j_i)
         X_plus_conv = conv_op(X_plus)
@@ -126,7 +179,7 @@ class Huber(nn.Module):
     
         # w, D, v = torch.linalg.svd(X)
         # print(D)
-
+            
         X_plus = torch.linalg.pinv(X) # (i_j, r)
         X_plus_conv = conv_op(X_plus)
 
