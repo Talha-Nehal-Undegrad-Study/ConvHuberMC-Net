@@ -50,6 +50,23 @@ class PseudoInverse(nn.Module):
 
     model = PseudoInverse(a, b, c)
     """
+class PseudoInverse(nn.Module):
+    def __init__(self):
+        super(PseudoInverse, self).__init__()
+        self.W = None
+        self.B = None
+
+    def forward(self, input_dim, output_dim):
+        # Dynamically create W and B with the required dimensions if they are not already created
+        if self.W is None or self.B is None or self.W.shape[1] != input_dim or self.B.shape[0] != output_dim:
+            self.W = nn.Parameter(torch.randn(output_dim, input_dim) * 0.01)
+            self.B = nn.Parameter(torch.randn(input_dim, output_dim) * 0.01)
+
+        # Compute the dot product of W and B to approximate the pseudo-inverse
+        pseudo_inverse = torch.matmul(self.W, self.B)
+        return pseudo_inverse
+
+
 
 def to_var(X, CalInGPU):
     if CalInGPU and torch.cuda.is_available():
@@ -127,7 +144,6 @@ class Huber(nn.Module):
         W_matrix = self.W_matrices[some_index]
         B_matrix = self.B_matrices[some_index]
         X_plus_approx = torch.matmul(W_matrix(), B_matrix())
-
 
         X_plus = torch.linalg.pinv(X) # (r, j_i)
         X_plus_conv = conv_op(X_plus)
