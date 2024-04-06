@@ -44,3 +44,27 @@ Epoch: 12 2024-04-07 03:35:09
 
 Epoch: 13 2024-04-07 03:37:49
 
+Epoch: 14 2024-04-07 03:40:47
+
+Epoch: 15 2024-04-07 03:42:38
+
+Loading and calculating training batches...
+Training time is 96.267206Loading and calculating validation batches...
+Test time is 6.724494Epoch [15/20], Mean Training Loss:6.30322e-05, Mean Validation Loss:1.36027e+01
+saved at [epoch15/20]
+Epoch: 16 2024-04-07 03:44:21
+
+Epoch: 17 2024-04-07 03:46:12
+
+Epoch: 18 2024-04-07 03:48:13
+
+Epoch: 19 2024-04-07 03:50:17
+
+Epoch: 20 2024-04-07 03:52:15
+
+Loading and calculating training batches...
+Training time is 116.255073Loading and calculating validation batches...
+Test time is 8.022531Epoch [20/20], Mean Training Loss:6.10157e-05, Mean Validation Loss:1.35447e+01
+saved at [epoch20/20]
+
+Min Loss = 1.3519e+01
