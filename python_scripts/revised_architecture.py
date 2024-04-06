@@ -28,39 +28,41 @@ from python_scripts.utils import psi, rho, alpha
     # self.B = nn.Parameter(torch.zeros((400, 500), device = torch.device(self.device), requires_grad = CalInGPU))
 
 
+# class PseudoInverse(nn.Module):
+#     def __init__(self, a, b, c):
+#         super(PseudoInverse, self).__init__()
+#         # Initialize W and B as learnable matrices with appropriate dimensions
+#         # W has shape (c, a) and B has shape (b, c) to ensure the dot product will have shape (b, a)
+#         self.W = nn.Linear(a, c, bias = False)
+#         self.B = nn.Linear(c, b, bias = False)
+
+#     def forward(self):
+#         # Compute the dot product of W and B to approximate the pseudo-inverse
+#         # The result will be of shape (b, a), assuming matrix multiplication rules
+#         pseudo_inverse = self.B(self.W.weight).t()
+#         return pseudo_inverse
+
+# Example usage:
+"""
+a = 49  # Dimension of the input matrix's height
+b = 60  # Dimension of the input matrix's width
+c = 50  # Intermediate dimension size
+
+model = PseudoInverse(a, b, c)
+"""
+
 class PseudoInverse(nn.Module):
-    def __init__(self, a, b, c):
-        super(PseudoInverse, self).__init__()
-        # Initialize W and B as learnable matrices with appropriate dimensions
-        # W has shape (c, a) and B has shape (b, c) to ensure the dot product will have shape (b, a)
-        self.W = nn.Linear(a, c, bias = False)
-        self.B = nn.Linear(c, b, bias = False)
-
-    def forward(self):
-        # Compute the dot product of W and B to approximate the pseudo-inverse
-        # The result will be of shape (b, a), assuming matrix multiplication rules
-        pseudo_inverse = self.B(self.W.weight).t()
-        return pseudo_inverse
-
-    # Example usage:
-    """
-    a = 49  # Dimension of the input matrix's height
-    b = 60  # Dimension of the input matrix's width
-    c = 50  # Intermediate dimension size
-
-    model = PseudoInverse(a, b, c)
-    """
-class PseudoInverse(nn.Module):
-    def __init__(self):
+    def __init__(self, rank):
         super(PseudoInverse, self).__init__()
         self.W = None
         self.B = None
+        self.inter_dim = rank
 
     def forward(self, input_dim, output_dim):
         # Dynamically create W and B with the required dimensions if they are not already created
         if self.W is None or self.B is None or self.W.shape[1] != input_dim or self.B.shape[0] != output_dim:
-            self.W = nn.Parameter(torch.randn(output_dim, input_dim) * 0.01)
-            self.B = nn.Parameter(torch.randn(input_dim, output_dim) * 0.01)
+            self.W = nn.Parameter(torch.randn(input_dim, self.inter_dim) * 0.01)
+            self.B = nn.Parameter(torch.randn(self.inter_dim, output_dim) * 0.01)
 
         # Compute the dot product of W and B to approximate the pseudo-inverse
         pseudo_inverse = torch.matmul(self.W, self.B)
@@ -112,16 +114,15 @@ class Conv2dC(nn.Module):
 
 
 class Huber(nn.Module):
-    def __init__(self, kernel, conv_layers, iter):
+    def __init__(self, kernel, conv_layers, matrix_layers, iter, layers):
         super(Huber, self).__init__()
 
         self.hubreg_iters = iter
         self.conv_layers = conv_layers
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.matrix_layers = matrix_layers
+        self.layers = layers
 
-        # Initialize W and B matrices for each column of V and each row of U
-        self.W_matrices = nn.ModuleList([PseudoInverse(a, c, b) for _ in range(max(a, b))])
-        self.B_matrices = nn.ModuleList([PseudoInverse(c, b, a) for _ in range(max(a, b))])
 
     def get_rows(self, column):
         # returns row indices of non-zero elements in column
@@ -138,15 +139,14 @@ class Huber(nn.Module):
     def hubregv(self, tup_arg):
         # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
-        beta, X, y, conv_op = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
+        beta, X, y, matrix_op, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4], tup_arg[5]
         gamma = 2
         
-        W_matrix = self.W_matrices[some_index]
-        B_matrix = self.B_matrices[some_index]
-        X_plus_approx = torch.matmul(W_matrix(), B_matrix())
+       
+        X_plus_approx = matrix_op.forward(input_dim = beta.shape[0], output_dim = X.shape[0])
 
-        X_plus = torch.linalg.pinv(X) # (r, j_i)
-        X_plus_conv = conv_op(X_plus)
+        # X_plus = torch.linalg.pinv(X) # (r, j_i)
+        X_plus_conv = conv_op(X_plus_approx)
         
         # Note: The ill-condition thingy is not caused by hubregv but hubregu
 
@@ -185,7 +185,7 @@ class Huber(nn.Module):
     def hubregu(self, tup_arg):
         # beta: (1, r), X: (r, i_j), y: (1, i_j)
 
-        beta, X, y, conv_op = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3]
+        beta, X, y, matrix_op, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4], tup_arg[5]
         gamma = 2
         # print("U\n")
         # print(X)
@@ -195,9 +195,11 @@ class Huber(nn.Module):
     
         # w, D, v = torch.linalg.svd(X)
         # print(D)
-            
-        X_plus = torch.linalg.pinv(X) # (i_j, r)
-        X_plus_conv = conv_op(X_plus)
+
+        X_plus_approx = matrix_op.forward(input_dim = X.shape[1], output_dim = beta.shape[1])
+
+        # X_plus = torch.linalg.pinv(X) # (i_j, r)
+        X_plus_conv = conv_op(X_plus_approx)
 
         # norm_value = torch.norm(X_plus_conv_temp, p = 2)
         # X_plus_conv = X_plus_conv_temp / norm_value
@@ -234,7 +236,7 @@ class Huber(nn.Module):
         # U = self.U.clone().detach()
         # V = self.V.clone().detach()
         
-        X, U, V = lst[0], lst[1], lst[2]
+        X, U, V, layer = lst[0], lst[1], lst[2], lst[3]
 
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -242,7 +244,10 @@ class Huber(nn.Module):
         for j in range(V.shape[1]):
             rows = self.get_rows(X[:, j]) # row indices for jth column
             # V[:, j: j + 1] = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], self.conv_layers[j]))
-            new_V_col = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], self.conv_layers[j]))
+            new_V_col = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], 
+                                      self.matrix_layers[layer * V.shape[1] + j], 
+                                      self.conv_layers[j], 
+                                      layer))
             V = torch.cat((V[:, :j], new_V_col, V[:, j + 1:]), dim = 1)
 
         for i in range(U.shape[0]):
@@ -251,11 +256,16 @@ class Huber(nn.Module):
             # print(V)
             # print("Moving Out\n")
             # U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], self.conv_layers[j + i]))
-            new_U_row = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], self.conv_layers[j + i]))
+            new_U_row = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], 
+                                      self.matrix_layers[(V.shape[1] * self.layers) + (layer * U.shape[0] + i)], 
+                                      self.conv_layers[j + i], 
+                                      layer))
             U = torch.cat((U[:i, :], new_U_row, U[i + 1:, :]), dim = 0)
+        
+        layer += 1
 
         # print("Forward Pass Done!")
-        return [X, U, V]
+        return [X, U, V, layer]
 
         # # for layer in range(self.layers):
         # rows = self.get_rows(X[:, col])
@@ -288,15 +298,24 @@ class UnfoldedNet_Huber(nn.Module):
         conv_layers_v = [Conv2dC(kernel = self.kernel) for _ in range(self.V.shape[1])]
         conv_layers_u = [Conv2dC(kernel = self.kernel) for _ in range(self.U.shape[0])]
 
-        # Concatenate the two lists
-        combined_conv_layers = conv_layers_v + conv_layers_u
+        # Initialize W and B matrices for each column of V and each row of U per each layer
+        W_B_matrices_v = [PseudoInverse(rank = self.rank)] * self.V.shape[1] * self.layers
+        
+        W_B_matrices_u = [PseudoInverse(rank = self.rank)] * self.U.shape[0] * self.layers
 
+        # Concatenate all the learnable conv layer
+        combined_conv_layers = conv_layers_v + conv_layers_u
         # Create a single ModuleList from the combined list
         self.conv_layers = nn.ModuleList(combined_conv_layers)
 
+        # Concatenate all the learnable matrices layer
+        combined_matrix_layers = W_B_matrices_v + W_B_matrices_u
+        # Create a single ModuleList from the combined list of matrices
+        self.matrix_layers = nn.ModuleList(combined_matrix_layers)
+
         filt = []
         for i in range(self.layers):
-            filt.append(Huber(self.kernel, self.conv_layers, self.iter))
+            filt.append(Huber(self.kernel, self.conv_layers, self.matrix_layers, self.iter, self.layers))
             
         self.huber_obj = nn.Sequential(*filt)
 
@@ -310,7 +329,7 @@ class UnfoldedNet_Huber(nn.Module):
 
         # Step 1: Compute Forward Pass through all the layers and predict ground truth matrix
         # print('c before call:', self.c)
-        X, U, V = self.huber_obj([X, self.U.clone(), self.V.clone(), 0])
+        X, U, V, layer = self.huber_obj([X, self.U.clone(), self.V.clone(), 0])
         # print('c after call:', self.c)
 
         return U @ V
@@ -389,7 +408,6 @@ class LP1(nn.Module):
         
         X, U, V, layer = lst[0], lst[1], lst[2], lst[3]
         Omega = self.findNonZeroIndices(X)
-        layer += 1
 
         U, V = U.to(self.device), V.to(self.device)
 
@@ -415,6 +433,8 @@ class LP1(nn.Module):
             new_U_row = self.lp1u((beta, V_I, b_I, self.conv_layers[j + i]))
             # U = torch.cat((U[:i, :], new_U_row, U[i + 1:, :]), dim = 0)
             U[i, :] = new_U_row.squeeze()
+        
+        layer += 1
 
         return [X, U, V, layer]
 

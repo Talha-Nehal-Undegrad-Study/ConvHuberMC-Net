@@ -106,5 +106,6 @@ def plot_and_save_mse_vs_epoch(training_loss, validation_loss, dir):
     axs[1].legend()
 
     plt.tight_layout()
-    plt.show()
     plt.savefig(dir)
+    plt.show()
+    
