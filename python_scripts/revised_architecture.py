@@ -265,6 +265,8 @@ class Huber(nn.Module):
         layer += 1
 
         # print("Forward Pass Done!")
+        print(f'Reconstructed V: {V}. Has nans: {torch.isnan(V).any()} \n')
+        print(f'Reconstructed U: {U}. Has nans: {torch.isnan(U).any()} \n')
         return [X, U, V, layer]
 
         # # for layer in range(self.layers):
