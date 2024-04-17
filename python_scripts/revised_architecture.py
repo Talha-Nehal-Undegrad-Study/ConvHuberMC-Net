@@ -55,11 +55,11 @@ class PseudoInverse(nn.Module):
         super(PseudoInverse, self).__init__()
         self.W = None
         self.B = None
-        self.inter_dim = rank
 
     def forward(self, input_dim, output_dim):
         # Dynamically create W and B with the required dimensions if they are not already created
         if self.W is None or self.B is None or self.W.shape[1] != input_dim or self.B.shape[0] != output_dim:
+            self.inter_dim = np.random.randint(1, 11)
             self.W = nn.Parameter(torch.randn(input_dim, self.inter_dim) * 0.01)
             self.B = nn.Parameter(torch.randn(self.inter_dim, output_dim) * 0.01)
 
@@ -84,9 +84,9 @@ class Conv2dC(nn.Module):
         pad0 = int((kernel[0] - 1) / 2)
         pad1 = int((kernel[1] - 1) / 2)
         if torch.cuda.is_available():
-            self.convR = nn.Conv2d(1, 1, (kernel[0], kernel[0]), (1, 1), (pad0, pad0), groups = 1).cuda()
+            self.convR = nn.Conv2d(1, 1, (kernel[0], kernel[0]), (1, 1), (pad0, pad1), groups = 1).cuda()
         else:
-            self.convR = nn.Conv2d(1, 1, (kernel[0], kernel[0]), (1, 1), (pad0, pad0), groups = 1).to('cpu')
+            self.convR = nn.Conv2d(1, 1, (kernel[0], kernel[0]), (1, 1), (pad0, pad1), groups = 1).to('cpu')
         
         # Initialize weights to zero
         self.convR.weight.data.zero_()
@@ -146,6 +146,9 @@ class Huber(nn.Module):
 
         # X_plus = torch.linalg.pinv(X) # (r, j_i)
         X_plus_conv = conv_op(X_plus_approx)
+        # if torch.isnan(X_plus_conv).any():
+        #     print(f'Reconstructed Conv Matrix V {conv_op.convR} \n')
+        print(f'Reconstructed Conv Matrix V {conv_op.convR.weight.data} Has nans: {torch.isnan(X_plus_conv).any()} \n')
         
         # Note: The ill-condition thingy is not caused by hubregv but hubregu
 
@@ -199,7 +202,8 @@ class Huber(nn.Module):
 
         # X_plus = torch.linalg.pinv(X) # (i_j, r)
         X_plus_conv = conv_op(X_plus_approx)
-
+        
+        print(f'Reconstructed Conv Matrix U {conv_op.convR.weight.data} Has nans: {torch.isnan(X_plus_conv).any()} \n')
         # norm_value = torch.norm(X_plus_conv_temp, p = 2)
         # X_plus_conv = X_plus_conv_temp / norm_value
 

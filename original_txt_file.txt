@@ -1,0 +1,46 @@
+# Compiling all that we did
+# 1) Took Dr.Tahir's online ADSP course. Read Chapter 4 and Appendix of 'Principles, Computation, Analysis' by John Wright and Yi Ma for basic understanding of 
+# preliminaries of the sproj i.e. various optimization algorithms, and duality theory
+# 2) Deep Learning online Course by Daniel Burke 
+# 3) Read and replicated papers of Shoaib Bhai's (DUPA-RPCA, DUST-RPCA)
+# 4) Refined and Properly documented and experimented ConvMC-Net on Synthetic Data and compared it with ADMM-Net (Also documented : github_link here)
+# 5) After comparison with ADMM we concluded that our method was better in terms of inference and it was similar if not better in all of the combinations
+# 6) After comparing with ADMM we moved on to other prominent algorithms like L0-BCD - state of the art method for GMM noise M. After replicating its results in MATLAB
+# we looked for its comparison with ConvMC. When we looked at their performance, it became clear that we were not doing a fair comparison because our objective function
+# did not assume our matrix to be corrupted by white gaussian noise / GMM noise which made our non-DNN iterative update of the lagrange multiplier very suspicious.
+# 7) Figured out that Shoaib Bhai was dealing with a vanilla MC problem i.e. with no noise while other algorithms dealt with atleast white noise or GMM noise.
+# 6) Therefore, we resorted immediately to looking for other algorithms (which dealt with GMM noise as that is most prominent problem in recent publications)
+# and can be unfolded
+# 7) We chose M-Estimation RMC which utilized hubreg algorithm (developed by MM technique). (Maybe we shouldnt have been to hasty about it)
+# 8) We read the paper Ollila, Esa, and Ammar Mian. "Block-Wise Minimization-Majorization Algorithm for Huber’s Criterion: Sparse Learning and Applications." 2020 IEEE International Workshop on Machine Learning for Signal Processing, 21-24 Sept. 2020, Espoo, Finland.
+# 9) After reading the paper, we unfolded it (provide the original code here) and experimented on synthetic dataset. 
+# 10) After much coding and experimenting, we found that the loss curves were not behaving in an expected manner. We then resorted to further readings to get a further
+# grasp on the theory behind the algorithm from 'Robust Signal Processing' book. 
+# 11) We came to realize the original hubreg algorithm was actually present in this book and it had no hyperparameters like the above variant of hubreg we found. 
+# 12) We were reluctant to unfold it seeing as there was nothing that seemed 'learnable' in it however after discussion with a peer, we decided to unfold it.
+# 13) We utilized convolution mappings on to the psuedo-inverse matrix as a learnable parameter and the results we got were far better than the previous ones
+# 14) The loss curves of both training and validation and inference time was reasonable in many combinations however for certain combinations of DB and sampling rate,
+# the validation loss curve increased for a significant number of epochs but later decreased however the suspicious thing was it ended at a higher loss than it started
+# with. 
+# 15) Furthermore, when experimenting with different matrix sizes (different to the ones in L0-BCD) we found that M-Est and lp-reg were performing 
+# better than L0-BCD in several combinations. To test this hypothesis, we used L0-BCD matrix size and compared results for 400 x 500 and 150 x 300 in image inpainting 
+# and we found that L0-BCD did in fact beat all others at 400 x 500 but was performed similar to M-est in 150 x 300 for a second place while first place went to Lp-reg
+# Further research led us to believing that maybe L0-BCD performance can be better if we tune its epsilon hyperparameter (from Xiao Peng)
+# 15) While working simultaneously on improving upon this issue, we replicated refined and made concrete MATLAB scripts for other algorithms we had to compare it with 
+# including L0-BCD, M-Est, ORMC, Lp-reg(p = 1), implemented lp-ADMM (p = 1) which we deemed were strongest competitors out there (except for ORMC lol)
+# 16) Seeing as we are approaching the end of our sproj we were determined to atleast make our efforts and Sir's valuable time spent worthwile i.e. achieve better results
+# than the iterative version. For now we were seeing that our unfolded version was similar in terms of inference time but for early sampling rates it was not better. 
+# For later sampling rates it approached its performance
+# 17) To improve upon this, we came back to our loss curves in hopes of finding a way to mitigate the problem. We thought of learning the psuedo inverse as well (by 
+# a product of two matrices) and we also thought of different ways of initialization like Xavier and passing the product of the two matrices through a non-linear
+# activation function like Tanh in hopes of better performance.
+# 18) However, so far we have only been seeing a consistent performance in both training and validation loss curves i.e. between the ranges (4e-4 and 3e-4) for training
+# and (7 - 8) for validation respectively.
+
+# Future Directions: 
+# Experiment further on ConvMC-Net on image inpainting and synthetic dataset and compare it with existing methods in terms of inference. We are trying this if 
+# we overcomplicated it before and it was not suspicious
+# And we try to achieve better performance than the iterative version for M-Est. This way we will have two sections in the paper one for ConvMC and its performance
+# followed by a brutally honest review of it. The next section will be our attempts at unfolding a algorithm designed for a GMM RMC problem rather than the vanilla problem
+
+
