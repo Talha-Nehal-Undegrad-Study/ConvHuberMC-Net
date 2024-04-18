@@ -28,7 +28,7 @@ This document summarizes the activities and findings of our senior project focus
 6. **Unfolding and Optimization:**
    - Initially chose to unfold M-Estimation using the hubreg algorithm described by Ollila and Mian in their paper on sparse learning applications.
    - After unfolding this variant and conducting experiments on synthetic data, we observed unexpected behavior of loss curves, which led us to further investigation of the underlying theory.
-   - Upon deeper study of [*Robust Statistics for Signal Processing*](https://www.cambridge.org/core/books/robust-statistics-for-signal-processing/0C1419475504BC0E6C26376185813B6D), we realized that the original hubreg algorithm, which, unlike the previously unfolded variant, had no hyperparameters, was more suitable for our needs.
+   - Upon deeper study of [*Robust Statistics for Signal Processing*](https://www.cambridge.org/core/books/robust-statistics-for-signal-processing/0C1419475504BC0E6C26376185813B6D), we realized that the original hubreg algorithm found in the book, which, unlike the previously unfolded variant, had no hyperparameters, was more suitable for our needs.
    - Despite initial reluctance due to its seemingly unlearnable structure, peer discussions convinced us to proceed with unfolding the original hubreg algorithm.
    - Implemented convolution mappings onto the pseudo-inverse matrix as a learnable parameter, which significantly improved our results over the initial approach.
 7. **Performance Analysis and Comparisons:**
@@ -42,7 +42,7 @@ This document summarizes the activities and findings of our senior project focus
    - Explored enhancements to the unfolding method by learning the pseudo-inverse matrix through a product of two matrices and experimenting with initialization methods (e.g., Xavier) and non-linear activations (e.g., tanh) to improve performance.
    - Observed consistent performance in training and validation loss curves, with ranges between 4e-4 to 3e-4 for training and 7 to 8 for validation which is very 
    suspicious as it seems to imply that learning the psuedo-inverse has somehow made the algorithm indifferent to the noise and sampling rate combinations (note that difference loss metrics were used for training and validation).
-   - More details can be found on GitHub regarding our experiments with [M-Estimation](https://github.com/Talha-Nehal-Undegrad-Study/M-estimation-RMC) and its unfolded version, [ConvHuberMC-Net](https://github.com/Talha-Nehal-Undegrad-Study/ConvHuberMC-Net).
+   - More details can be found on GitHub regarding our experiments with [M-Estimation](https://github.com/Talha-Nehal-Undegrad-Study/M-estimation-RMC) and its competitors and unfolded version, [ConvHuberMC-Net](https://github.com/Talha-Nehal-Undegrad-Study/ConvHuberMC-Net).
 
 ## Conclusions and Future Work
 9. **Current Findings:**
