@@ -101,7 +101,7 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
                 inputs = D[mat].to(device)
                 targets_L = L[mat].to(device)
                 outputs_L = model(inputs)
-                print(f'Reconstructed Output: {outputs_L}. Has nans: {torch.isnan(outputs_L).any()}')
+                # print(f'Reconstructed Output: {outputs_L}. Has nans: {torch.isnan(outputs_L).any()}')
                 loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
                 # loss = torch.square(torch.norm(targets_L, p = 'fro')) / loss_fn(outputs_L, targets_L)
                 # loss = (loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])

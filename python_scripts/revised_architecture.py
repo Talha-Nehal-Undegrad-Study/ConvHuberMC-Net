@@ -59,12 +59,17 @@ class PseudoInverse(nn.Module):
     def forward(self, input_dim, output_dim):
         # Dynamically create W and B with the required dimensions if they are not already created
         if self.W is None or self.B is None or self.W.shape[1] != input_dim or self.B.shape[0] != output_dim:
-            self.inter_dim = np.random.randint(1, 11)
-            self.W = nn.Parameter(torch.randn(input_dim, self.inter_dim) * 0.01)
-            self.B = nn.Parameter(torch.randn(self.inter_dim, output_dim) * 0.01)
+            # self.inter_dim = np.random.randint(1, 11)
+            # self.W = nn.Parameter(torch.randn(input_dim, self.inter_dim) * 0.01)
+            # self.B = nn.Parameter(torch.randn(self.inter_dim, output_dim) * 0.01)
+            
+            self.W = nn.Parameter(torch.randn(input_dim, output_dim) * np.random.uniform(0.01, 0.05))
+            self.B = nn.Parameter(torch.randn(input_dim, output_dim) * np.random.uniform(0.01, 0.05))
 
         # Compute the dot product of W and B to approximate the pseudo-inverse
-        pseudo_inverse = torch.matmul(self.W, self.B)
+        # pseudo_inverse = torch.matmul(self.W, self.B)
+        # Compute hadamard product
+        pseudo_inverse = torch.multiply(self.W, self.B)
         return pseudo_inverse
 
 
@@ -142,13 +147,13 @@ class Huber(nn.Module):
         gamma = 2
         
        
-        X_plus_approx = matrix_op.forward(input_dim = beta.shape[0], output_dim = X.shape[0])
+        # X_plus_approx = matrix_op.forward(input_dim = beta.shape[0], output_dim = X.shape[0])
 
-        # X_plus = torch.linalg.pinv(X) # (r, j_i)
-        X_plus_conv = conv_op(X_plus_approx)
+        X_plus = torch.linalg.pinv(X) # (r, j_i)
+        X_plus_conv = conv_op(X_plus)
         # if torch.isnan(X_plus_conv).any():
         #     print(f'Reconstructed Conv Matrix V {conv_op.convR} \n')
-        print(f'Reconstructed Conv Matrix V {conv_op.convR.weight.data} Has nans: {torch.isnan(X_plus_conv).any()} \n')
+        # print(f'Reconstructed Conv Matrix V {conv_op.convR.weight.data} Has nans: {torch.isnan(X_plus_conv).any()} \n')
         
         # Note: The ill-condition thingy is not caused by hubregv but hubregu
 
@@ -198,12 +203,12 @@ class Huber(nn.Module):
         # w, D, v = torch.linalg.svd(X)
         # print(D)
 
-        X_plus_approx = matrix_op.forward(input_dim = X.shape[1], output_dim = beta.shape[1])
+        # X_plus_approx = matrix_op.forward(input_dim = X.shape[1], output_dim = beta.shape[1])
 
-        # X_plus = torch.linalg.pinv(X) # (i_j, r)
-        X_plus_conv = conv_op(X_plus_approx)
+        X_plus = torch.linalg.pinv(X) # (i_j, r)
+        X_plus_conv = conv_op(X_plus)
         
-        print(f'Reconstructed Conv Matrix U {conv_op.convR.weight.data} Has nans: {torch.isnan(X_plus_conv).any()} \n')
+        # print(f'Reconstructed Conv Matrix U {conv_op.convR.weight.data} Has nans: {torch.isnan(X_plus_conv).any()} \n')
         # norm_value = torch.norm(X_plus_conv_temp, p = 2)
         # X_plus_conv = X_plus_conv_temp / norm_value
 
@@ -268,8 +273,8 @@ class Huber(nn.Module):
         layer += 1
 
         # print("Forward Pass Done!")
-        print(f'Reconstructed V: {V}. Has nans: {torch.isnan(V).any()} \n')
-        print(f'Reconstructed U: {U}. Has nans: {torch.isnan(U).any()} \n')
+        # print(f'Reconstructed V: {V}. Has nans: {torch.isnan(V).any()} \n')
+        # print(f'Reconstructed U: {U}. Has nans: {torch.isnan(U).any()} \n')
         return [X, U, V, layer]
 
         # # for layer in range(self.layers):

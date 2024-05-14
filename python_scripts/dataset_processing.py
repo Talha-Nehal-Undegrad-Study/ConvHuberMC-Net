@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 import torch.utils.data as data
-from python_scripts import generate_synthetic_data
-from python_scripts import format_data
+from image_py_scripts import generate_synthetic_data
+from image_py_scripts import format_data
 
 # ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
 # ROOT = 'C:/Users/HP/Git/ConvHuberMC-Net/HuberMC_Data'

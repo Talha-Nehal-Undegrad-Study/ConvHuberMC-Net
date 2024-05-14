@@ -10,5 +10,9 @@ Parameters =
 Loading phase...
 Finished loading.
 
-Epoch: 1 2024-04-14 02:24:52
+Epoch: 1 2024-04-20 02:37:44
 
+Epoch: 2 2024-04-20 02:42:27
+
+
+Min Loss = 7.8009e+00

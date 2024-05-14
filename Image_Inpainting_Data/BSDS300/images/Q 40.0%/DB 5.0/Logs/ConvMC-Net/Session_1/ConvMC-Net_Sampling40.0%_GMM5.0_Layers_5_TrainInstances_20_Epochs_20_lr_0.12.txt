@@ -1,0 +1,81 @@
+Project Name: ConvMC-Net_Sampling40.0%_GMM5.0
+Configuring network...
+Instantiating Model...
+Model Instantiated...
+params_net=
+{'layers': 5, 'kernel': [(3, 1), (3, 1), (3, 1), (3, 1), (3, 1)], 'initial_mu_inverse': 0.0, 'initial_y1': 0.8, 'coef_mu_inverse': 0.36, 'CalInGPU': False, 'rank': 10, 'size1': 150, 'size2': 300}
+
+Loading phase...
+----------------
+Finished loading.
+
+
+2024-05-11 01:00:05
+
+2024-05-11 01:00:38
+
+2024-05-11 01:01:08
+
+2024-05-11 01:01:35
+
+2024-05-11 01:02:06
+Loading and calculating training batches...
+Training time is 23.939945
+Loading and calculating validation batches...
+Test time is 7.274070
+
+2024-05-11 01:02:38
+
+2024-05-11 01:03:09
+
+2024-05-11 01:03:36
+
+2024-05-11 01:04:02
+
+2024-05-11 01:04:28
+Loading and calculating training batches...
+Training time is 21.636404
+Loading and calculating validation batches...
+Test time is 3.989937
+
+2024-05-11 01:04:54
+
+2024-05-11 01:05:26
+
+2024-05-11 01:05:58
+
+2024-05-11 01:06:26
+
+2024-05-11 01:07:02
+Loading and calculating training batches...
+Training time is 27.892418
+Loading and calculating validation batches...
+Test time is 6.806998
+
+2024-05-11 01:07:37
+
+2024-05-11 01:08:18
+
+2024-05-11 01:08:50
+
+2024-05-11 01:09:29
+
+2024-05-11 01:09:58
+Loading and calculating training batches...
+Training time is 25.350027
+Loading and calculating validation batches...
+Test time is 5.798855
+Epoch [20/20], Lossmean:3.17661e-05, Validation lossmean:9.19966e-01
+mu_inverse: [0.669 0.846 1.267 0.208 2.016]
+y1: [[0.618 0.632 0.556 ... 0.563 0.755 0.393]
+ [0.7   0.401 0.628 ... 0.952 0.977 0.579]
+ [0.278 0.646 0.358 ... 0.942 0.283 0.502]
+ ...
+ [0.559 0.65  0.488 ... 0.915 0.548 1.056]
+ [0.652 0.741 0.527 ... 0.777 0.793 0.478]
+ [0.789 0.224 0.864 ... 0.762 0.706 0.725]]
+exp_L: [0.238 0.252 0.281 0.199 0.318]
+saved at [epoch20/20]
+
+Min Loss = 5.6106e-01
+min Loss = 5.6106e-01

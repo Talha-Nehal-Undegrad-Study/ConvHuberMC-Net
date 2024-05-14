@@ -1,0 +1,60 @@
+Project Name: Try 1 HuberMC-Net Q 80.0% DB 5.0
+
+Configuring network...
+Instantiating Model...
+Model Instantiated...
+
+Parameters = 
+{'size1': 400, 'size2': 500, 'rank': 10, 'device': 'cpu', 'hubreg_iters': 2, 'layers': 3, 'kernel': (3, 3), 'CalInGPU': False}
+
+Loading phase...
+Finished loading.
+
+Epoch: 1 2024-05-14 05:31:19
+
+Epoch: 2 2024-05-14 05:36:49
+
+Epoch: 3 2024-05-14 05:42:14
+
+Epoch: 4 2024-05-14 05:47:55
+
+Epoch: 5 2024-05-14 05:53:06
+
+Loading and calculating training batches...
+Training time is 273.910474Loading and calculating validation batches...
+Test time is 46.075673Epoch: 6 2024-05-14 05:58:26
+
+Epoch: 7 2024-05-14 06:03:48
+
+Epoch: 8 2024-05-14 06:09:11
+
+Epoch: 9 2024-05-14 06:14:39
+
+Epoch: 10 2024-05-14 06:20:20
+
+Loading and calculating training batches...
+Training time is 271.267787Loading and calculating validation batches...
+Test time is 50.158236Epoch: 11 2024-05-14 06:25:41
+
+Epoch: 12 2024-05-14 06:33:51
+
+Epoch: 13 2024-05-14 06:41:35
+
+Epoch: 14 2024-05-14 06:49:45
+
+Epoch: 15 2024-05-14 06:57:23
+
+Loading and calculating training batches...
+Training time is 407.507103Loading and calculating validation batches...
+Test time is 67.169402Epoch: 16 2024-05-14 07:05:18
+
+Epoch: 17 2024-05-14 07:13:02
+
+Epoch: 18 2024-05-14 07:20:46
+
+Epoch: 19 2024-05-14 07:27:19
+
+Epoch: 20 2024-05-14 07:34:50
+
+Loading and calculating training batches...
+Training time is 400.422670Loading and calculating validation batches...

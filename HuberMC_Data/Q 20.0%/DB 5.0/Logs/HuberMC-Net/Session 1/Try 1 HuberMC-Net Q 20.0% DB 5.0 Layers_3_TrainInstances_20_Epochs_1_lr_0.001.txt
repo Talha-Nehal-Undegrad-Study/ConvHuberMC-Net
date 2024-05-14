@@ -1,0 +1,18 @@
+Project Name: Try 1 HuberMC-Net Q 20.0% DB 5.0
+
+Configuring network...
+Instantiating Model...
+Model Instantiated...
+
+Parameters = 
+{'size1': 150, 'size2': 300, 'rank': 10, 'device': 'cpu', 'hubreg_iters': 2, 'layers': 3, 'kernel': (3, 3), 'CalInGPU': False}
+
+Loading phase...
+Finished loading.
+
+Epoch: 1 2024-05-12 00:27:46
+
+Epoch [1/1], Mean Training Loss:4.46893e-05, Mean Validation Loss:1.99556e+01
+saved at [epoch1/1]
+
+Min Loss = 1.9956e+01
