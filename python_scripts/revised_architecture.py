@@ -50,27 +50,27 @@ c = 50  # Intermediate dimension size
 model = PseudoInverse(a, b, c)
 """
 
-class PseudoInverse(nn.Module):
-    def __init__(self, rank):
-        super(PseudoInverse, self).__init__()
-        self.W = None
-        self.B = None
+# class PseudoInverse(nn.Module):
+#     def __init__(self, rank):
+#         super(PseudoInverse, self).__init__()
+#         self.W = None
+#         self.B = None
 
-    def forward(self, input_dim, output_dim):
-        # Dynamically create W and B with the required dimensions if they are not already created
-        if self.W is None or self.B is None or self.W.shape[1] != input_dim or self.B.shape[0] != output_dim:
-            # self.inter_dim = np.random.randint(1, 11)
-            # self.W = nn.Parameter(torch.randn(input_dim, self.inter_dim) * 0.01)
-            # self.B = nn.Parameter(torch.randn(self.inter_dim, output_dim) * 0.01)
+#     def forward(self, input_dim, output_dim):
+#         # Dynamically create W and B with the required dimensions if they are not already created
+#         if self.W is None or self.B is None or self.W.shape[1] != input_dim or self.B.shape[0] != output_dim:
+#             # self.inter_dim = np.random.randint(1, 11)
+#             # self.W = nn.Parameter(torch.randn(input_dim, self.inter_dim) * 0.01)
+#             # self.B = nn.Parameter(torch.randn(self.inter_dim, output_dim) * 0.01)
             
-            self.W = nn.Parameter(torch.randn(input_dim, output_dim) * np.random.uniform(0.01, 0.05))
-            self.B = nn.Parameter(torch.randn(input_dim, output_dim) * np.random.uniform(0.01, 0.05))
+#             self.W = nn.Parameter(torch.randn(input_dim, output_dim) * np.random.uniform(0.01, 0.05))
+#             self.B = nn.Parameter(torch.randn(input_dim, output_dim) * np.random.uniform(0.01, 0.05))
 
-        # Compute the dot product of W and B to approximate the pseudo-inverse
-        # pseudo_inverse = torch.matmul(self.W, self.B)
-        # Compute hadamard product
-        pseudo_inverse = torch.multiply(self.W, self.B)
-        return pseudo_inverse
+#         # Compute the dot product of W and B to approximate the pseudo-inverse
+#         # pseudo_inverse = torch.matmul(self.W, self.B)
+#         # Compute hadamard product
+#         pseudo_inverse = torch.multiply(self.W, self.B)
+#         return pseudo_inverse
 
 
 
@@ -118,13 +118,12 @@ class Conv2dC(nn.Module):
 
 
 class Huber(nn.Module):
-    def __init__(self, kernel, conv_layers, matrix_layers, iter, layers):
+    def __init__(self, kernel, conv_layers, iter, layers):
         super(Huber, self).__init__()
 
         self.hubreg_iters = iter
         self.conv_layers = conv_layers
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.matrix_layers = matrix_layers
         self.layers = layers
 
 
@@ -143,7 +142,8 @@ class Huber(nn.Module):
     def hubregv(self, tup_arg):
         # beta: (r, 1), X: (j_i, r), y: (j_i, 1)
 
-        beta, X, y, matrix_op, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4], tup_arg[5]
+        # beta, X, y, matrix_op, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4], tup_arg[5]
+        beta, X, y, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4]
         gamma = 2
         
        
@@ -192,7 +192,8 @@ class Huber(nn.Module):
     def hubregu(self, tup_arg):
         # beta: (1, r), X: (r, i_j), y: (1, i_j)
 
-        beta, X, y, matrix_op, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4], tup_arg[5]
+        # beta, X, y, matrix_op, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4], tup_arg[5]
+        beta, X, y, conv_op, layer = tup_arg[0], tup_arg[1], tup_arg[2], tup_arg[3], tup_arg[4]
         gamma = 2
         # print("U\n")
         # print(X)
@@ -252,8 +253,8 @@ class Huber(nn.Module):
         for j in range(V.shape[1]):
             rows = self.get_rows(X[:, j]) # row indices for jth column
             # V[:, j: j + 1] = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], self.conv_layers[j]))
+            # for psuedo self.matrix_layers[layer * V.shape[1] + j], 
             new_V_col = self.hubregv((V[:, j: j + 1], U[rows, :], X[rows, j: j + 1], 
-                                      self.matrix_layers[layer * V.shape[1] + j], 
                                       self.conv_layers[j], 
                                       layer))
             V = torch.cat((V[:, :j], new_V_col, V[:, j + 1:]), dim = 1)
@@ -264,8 +265,8 @@ class Huber(nn.Module):
             # print(V)
             # print("Moving Out\n")
             # U[i: i + 1, :] = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], self.conv_layers[j + i]))
+            # for psuedo: self.matrix_layers[(V.shape[1] * self.layers) + (layer * U.shape[0] + i)]
             new_U_row = self.hubregu((U[i: i + 1, :], V[:, columns], X[i: i + 1, columns], 
-                                      self.matrix_layers[(V.shape[1] * self.layers) + (layer * U.shape[0] + i)], 
                                       self.conv_layers[j + i], 
                                       layer))
             U = torch.cat((U[:i, :], new_U_row, U[i + 1:, :]), dim = 0)
@@ -309,9 +310,9 @@ class UnfoldedNet_Huber(nn.Module):
         conv_layers_u = [Conv2dC(kernel = self.kernel) for _ in range(self.U.shape[0])]
 
         # Initialize W and B matrices for each column of V and each row of U per each layer
-        W_B_matrices_v = [PseudoInverse(rank = self.rank)] * self.V.shape[1] * self.layers
+        # W_B_matrices_v = [PseudoInverse(rank = self.rank)] * self.V.shape[1] * self.layers
         
-        W_B_matrices_u = [PseudoInverse(rank = self.rank)] * self.U.shape[0] * self.layers
+        # W_B_matrices_u = [PseudoInverse(rank = self.rank)] * self.U.shape[0] * self.layers
 
         # Concatenate all the learnable conv layer
         combined_conv_layers = conv_layers_v + conv_layers_u
@@ -319,13 +320,13 @@ class UnfoldedNet_Huber(nn.Module):
         self.conv_layers = nn.ModuleList(combined_conv_layers)
 
         # Concatenate all the learnable matrices layer
-        combined_matrix_layers = W_B_matrices_v + W_B_matrices_u
+        # combined_matrix_layers = W_B_matrices_v + W_B_matrices_u
         # Create a single ModuleList from the combined list of matrices
-        self.matrix_layers = nn.ModuleList(combined_matrix_layers)
+        # self.matrix_layers = nn.ModuleList(combined_matrix_layers)
 
         filt = []
         for i in range(self.layers):
-            filt.append(Huber(self.kernel, self.conv_layers, self.matrix_layers, self.iter, self.layers))
+            filt.append(Huber(self.kernel, self.conv_layers, self.iter, self.layers))
             
         self.huber_obj = nn.Sequential(*filt)
 
