@@ -1,0 +1,14 @@
+ % Chapter 3
+
+\chapter{Discussion, Future Prospects, and Reflections} % Write in your own chapter title
+\label{Chapter5}
+\lhead{} % Write in your own chapter title to set the page header
+
+\section{Discussion and Future Prospects} % will change this name 
+% Limitations + the fact that experimentation is ongoing not perfect but still has future prospect. May also mention in which types of data (image vs synthetic or 150 x 300 vs 400 x 500)  what algorithms of ours performed best. And what could have been done better overall (borrow content from section 5 and 6). Bonus section perhaps on our RNN idea.
+From our current results, we conclude that, on average, [blank] outperformed [blank] in [blank] task on a data set of size [blank]. And so on...
+
+Though we do not yet have conclusive results, our models clearly are not performing consistently. We know from domain knowledge that a higher sampling rate, SNR, or both should lead to a lower loss, higher PSNR, and higher SSIM. However, this expectation has not been met and this is perhaps the biggest problem of our models. Therefore, experimentation is as yet ongoing with the hope that we figure out whether the problem is due to suboptimal hyperparameters, an issue of model implementation, or the underlying iterative algorithm's inherent inability to be effectively unfolded. Once we discover the root cause, it would become much easier to improve our results and demonstrate that deep unfolding is a viable approach for matrix completion problems and that it can work with a number of different iterative algorithms. In the case that we fail to demonstrate this, future works might look into the possibility of radically different approaches, such as recurrent neural networks or methods from the expanding field of generative AI.
+
+\section{Reflections}
+The project provided profound insights into the challenges and complexities of unfolding algorithms for matrix completion in noisy environments. In hindsight, despite the fact that this was an entirely new area for us, a few missteps costed us a lot of valuable time and slowed our progress. For example, upon realizing that ConvMC-Net cannot be fairly compared with ADMM-Net due to difference in model assumptions, it might have been better to consult our peers about whether this is really the case, and, if it is, can we somehow modify ConvMC-Net instead of jumping to a new algorithm. Similarly, When we decided to unfold M-estimation, we could have asked whether some other algorithm would be more friendly to deep unfolding (as we primarily chose M-estimation based on the closeness of its results to those of $\ell_0$-BCD). These lessons will hopefully guide us in our future projects.
