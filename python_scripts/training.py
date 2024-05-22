@@ -145,8 +145,9 @@ def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
                 outputs_L = model(inputs)
                 # loss_val = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
                 # loss_val = torch.square(torch.norm(targets_L, p = 'fro')) / loss_fn(outputs_L, targets_L)
-                loss = nn.MSELoss(reduction = 'sum')
-                loss_val = (loss(outputs_L, targets_L)) / (targets_L.numel())
+                # loss = nn.MSELoss(reduction = 'sum')
+                # loss_val = (loss(outputs_L, targets_L)) / (targets_L.numel())
+                loss_val = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
                 # loss_val_mean += ((loss_val * loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])).item()
                 loss_val_mean += loss_val.item()
 
