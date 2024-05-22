@@ -1,0 +1,70 @@
+Project Name: Try 1 HuberMC-Net Q 20.0% DB 9.0
+
+Configuring network...
+Instantiating Model...
+Model Instantiated...
+
+Parameters = 
+{'size1': 150, 'size2': 300, 'rank': 10, 'device': 'cpu', 'hubreg_iters': 2, 'layers': 3, 'kernel': (3, 3), 'CalInGPU': False}
+
+Loading phase...
+Finished loading.
+
+Epoch: 1 2024-05-22 17:20:29
+
+Epoch: 2 2024-05-22 17:24:10
+
+Epoch: 3 2024-05-22 17:27:45
+
+Epoch: 4 2024-05-22 17:31:20
+
+Epoch: 5 2024-05-22 17:34:40
+
+Loading and calculating training batches...
+Training time is 190.313585Loading and calculating validation batches...
+Test time is 13.472129Epoch [5/20], Mean Training Loss:5.73002e-05, Mean Validation Loss:2.49695e-05
+saved at [epoch5/20]
+Epoch: 6 2024-05-22 17:38:04
+
+Epoch: 7 2024-05-22 17:41:16
+
+Epoch: 8 2024-05-22 17:44:29
+
+Epoch: 9 2024-05-22 17:47:49
+
+Epoch: 10 2024-05-22 17:50:57
+
+Loading and calculating training batches...
+Training time is 169.538164Loading and calculating validation batches...
+Test time is 14.418493Epoch [10/20], Mean Training Loss:5.45461e-05, Mean Validation Loss:2.50796e-05
+saved at [epoch10/20]
+Epoch: 11 2024-05-22 17:54:01
+
+Epoch: 12 2024-05-22 17:57:20
+
+Epoch: 13 2024-05-22 18:00:30
+
+Epoch: 14 2024-05-22 18:03:43
+
+Epoch: 15 2024-05-22 18:07:08
+
+Loading and calculating training batches...
+Training time is 187.166564Loading and calculating validation batches...
+Test time is 14.828780Epoch [15/20], Mean Training Loss:5.26040e-05, Mean Validation Loss:2.48640e-05
+saved at [epoch15/20]
+Epoch: 16 2024-05-22 18:10:30
+
+Epoch: 17 2024-05-22 18:13:49
+
+Epoch: 18 2024-05-22 18:17:00
+
+Epoch: 19 2024-05-22 18:20:16
+
+Epoch: 20 2024-05-22 18:23:32
+
+Loading and calculating training batches...
+Training time is 175.609995Loading and calculating validation batches...
+Test time is 12.965921Epoch [20/20], Mean Training Loss:5.10166e-05, Mean Validation Loss:2.47261e-05
+saved at [epoch20/20]
+
+Min Loss = 2.4704e-05
