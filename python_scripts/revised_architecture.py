@@ -104,6 +104,18 @@ class Conv2dC(nn.Module):
         self.convR.bias.data.zero_()
         # At groups = in_channels, each input channel is convolved with its own set of filters (of size out_channels/in_channels)
 
+        # Make parameters not learnable
+        for param in self.convR.parameters():
+            param.requires_grad = False
+        
+        # Move to GPU if available
+        if torch.cuda.is_available():
+            self.convR = self.convR.cuda()
+        else:
+            self.convR = self.convR.to('cpu')
+
+
+
     def forward(self, x):
         # get the height dimension and convert it to int
         n = x.shape[-1]

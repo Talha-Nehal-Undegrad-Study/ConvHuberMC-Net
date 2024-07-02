@@ -10,61 +10,19 @@ Parameters =
 Loading phase...
 Finished loading.
 
-Epoch: 1 2024-05-21 23:18:22
+Epoch: 1 2024-07-02 23:08:41
 
-Epoch: 2 2024-05-21 23:21:03
+Epoch: 2 2024-07-02 23:09:55
 
-Epoch: 3 2024-05-21 23:23:43
+Epoch: 3 2024-07-02 23:11:02
 
-Epoch: 4 2024-05-21 23:26:28
+Epoch: 4 2024-07-02 23:11:49
 
-Epoch: 5 2024-05-21 23:29:02
+Epoch: 5 2024-07-02 23:12:36
 
 Loading and calculating training batches...
-Training time is 147.931974Loading and calculating validation batches...
-Test time is 10.898655Epoch [5/20], Mean Training Loss:8.81101e-06, Mean Validation Loss:3.78213e-06
+Training time is 40.868041Loading and calculating validation batches...
+Test time is 9.911048Epoch [5/20], Mean Training Loss:9.88415e-06, Mean Validation Loss:3.90760e-06
 saved at [epoch5/20]
-Epoch: 6 2024-05-21 23:31:41
+Epoch: 6 2024-07-02 23:13:27
 
-Epoch: 7 2024-05-21 23:34:21
-
-Epoch: 8 2024-05-21 23:37:01
-
-Epoch: 9 2024-05-21 23:39:41
-
-Epoch: 10 2024-05-21 23:42:23
-
-Loading and calculating training batches...
-Training time is 155.926193Loading and calculating validation batches...
-Test time is 11.373440Epoch [10/20], Mean Training Loss:8.06907e-06, Mean Validation Loss:3.79534e-06
-saved at [epoch10/20]
-Epoch: 11 2024-05-21 23:45:10
-
-Epoch: 12 2024-05-21 23:47:52
-
-Epoch: 13 2024-05-21 23:50:37
-
-Epoch: 14 2024-05-21 23:53:22
-
-Epoch: 15 2024-05-21 23:56:07
-
-Loading and calculating training batches...
-Training time is 149.762787Loading and calculating validation batches...
-Test time is 10.982217Epoch [15/20], Mean Training Loss:7.51435e-06, Mean Validation Loss:3.78161e-06
-saved at [epoch15/20]
-Epoch: 16 2024-05-21 23:58:48
-
-Epoch: 17 2024-05-22 00:01:30
-
-Epoch: 18 2024-05-22 00:04:08
-
-Epoch: 19 2024-05-22 00:06:53
-
-Epoch: 20 2024-05-22 00:09:35
-
-Loading and calculating training batches...
-Training time is 152.788956Loading and calculating validation batches...
-Test time is 11.155972Epoch [20/20], Mean Training Loss:7.03367e-06, Mean Validation Loss:3.75179e-06
-saved at [epoch20/20]
-
-Min Loss = 3.6007e-06

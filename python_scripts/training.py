@@ -106,17 +106,17 @@ def train_step(model, dataloader, loss_fn, optimizer, CalInGPU, TrainInstances, 
                 # loss = torch.square(torch.norm(targets_L, p = 'fro')) / loss_fn(outputs_L, targets_L)
                 # loss = (loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])
                 # loss = ((loss_val * loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])).item()
-                if not inference:
-                    # print("Backward About to Start!")
-                    loss.backward()
+                # if not inference:
+                #     # print("Backward About to Start!")
+                #     loss.backward()
                     # print(loss)
                     # print(loss.grad)
 
                 # loss_mean += ((loss * loss_fn(outputs_L, targets_L)) / (targets_L.shape[0] * targets_L.shape[1])).item()
                 loss_mean += loss.item()
-        if not inference:
+        # if not inference:
             # loss_mean.backward()
-            optimizer.step()
+            # optimizer.step()
     loss_mean = loss_mean/TrainInstances
     # loss_lowrank_mean = loss_lowrank_mean/TrainInstances
 
