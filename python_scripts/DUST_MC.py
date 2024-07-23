@@ -5,43 +5,11 @@ import random
 import os
 from python_scripts import utils
 
-# # Compute exponent terms for all u
-#             exponent_terms = np.einsum('ij,ij->j', np.dot(DTD, H), H)
-#             exp_values = np.exp(exponent_terms)
-
-#             # Compute beta_u values
-#             beta_values = weighted_softmax(np.arange(T))
-
-#             # Compute G numerator and denominator using vectorized operations
-#             G_numerator = np.sum(beta_values * exp_values * H, axis=1)
-#             G_denominator = np.sum(beta_values * exp_values)
-
-#             # Compute y_t
-#             if G_denominator != 0:
-#                 G = G_numerator / G_denominator
-#             else:
-#                 G = np.zeros_like(G_numerator)
-
-#             y_t = lambda_2 * G
-
-#             # Here you can update h_t based on y_t and other factors if needed
-#             # Example update rule (this may vary based on your specific algorithm):
-#             # h_t = some_update_function(y_t, other_parameters)
-
-#             # Store the updated h_t back to H
-#             H[:, t] = h_t
 
 
-
-
-# Make a function which extracts the first Q samples from the dataset in a random manner for a speicifc split (Test, Train)
+# Make a function which extracts the first Q samples from the dataset in a random mi anner for a speicifc split (Test, Train)
 def get_sample(split, Q):
     pass
-    
-def weighted_softmax(u):
-    # Define or import your Beta_u function here.
-    # For demonstration purposes, we will use a placeholder function.
-    return np.exp(-u)
 
 def attention_based_algo(A, D, X, K, lambda_1, lambda_2, c):
     # A is measurment sensing matrix (m x n where n << m) and D is initialized by DCT (n x d where d >> n) and X is observed matrix (m x T)
