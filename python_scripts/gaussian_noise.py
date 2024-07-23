@@ -30,3 +30,10 @@ def gaussian_noise(signal, model, SNR):
         noise = np.multiply(sigma[0, 0] * np.random.normal(size = signal_size), (np.ones(shape = signal_size) - flag)) + np.multiply(sigma[0, 1] * np.random.normal(size = signal_size), flag)
     
     return noise
+
+# Function to add Gaussian noise with mean 0 and given variance
+def add_gaussian_noise(matrix, omega, variance):
+    noise = np.random.normal(0, np.sqrt(variance), size=omega[0].shape)
+    noisy_matrix = matrix.copy()
+    noisy_matrix[omega] += noise
+    return noisy_matrix

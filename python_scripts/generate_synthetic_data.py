@@ -40,3 +40,37 @@ def generate(r, c, rak, num_train_instances, num_test_instances, sampling_rate, 
         M_Omega_test[i, :, :] = M_Omega
 
     return M_train, M_Omega_train, M_test, M_Omega_test
+
+def generate_simple_gaussian_noise(r, c, rak, num_train_instances, num_test_instances, sampling_rate, variance):
+    # Generate the Omega matrix with sampling_rate
+    array_Omega = np.random.choice([1, 0], (r, c), p=[sampling_rate, 1 - sampling_rate])
+
+    # Initialize arrays to store the training and test data
+    M_train = np.zeros((num_train_instances, r, c))
+    M_Omega_train = np.zeros((num_train_instances, r, c))
+    M_test = np.zeros((num_test_instances, r, c))
+    M_Omega_test = np.zeros((num_test_instances, r, c))
+
+    # Loop to generate training data
+    for i in range(num_train_instances):
+        M = np.dot(np.random.normal(size=(r, rak)), np.random.normal(size=(rak, c)))
+        M_Omega = np.multiply(M, array_Omega)
+
+        omega = np.where(array_Omega == 1)
+        M_Omega_noisy = gaussian_noise.add_gaussian_noise(M_Omega, omega, variance)
+        
+        M_train[i, :, :] = M
+        M_Omega_train[i, :, :] = M_Omega_noisy
+
+    # Loop to generate test data
+    for i in range(num_test_instances):
+        M = np.dot(np.random.normal(size=(r, rak)), np.random.normal(size=(rak, c)))
+        M_Omega = np.multiply(M, array_Omega)
+
+        omega = np.where(array_Omega == 1)
+        M_Omega_noisy = gaussian_noise.add_gaussian_noise(M_Omega, omega, variance)
+        
+        M_test[i, :, :] = M
+        M_Omega_test[i, :, :] = M_Omega_noisy
+
+    return M_train, M_Omega_train, M_test, M_Omega_test
