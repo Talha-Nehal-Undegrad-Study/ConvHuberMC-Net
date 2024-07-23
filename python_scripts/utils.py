@@ -111,3 +111,9 @@ def normalize_paths(file_paths):
 
 # plt.tight_layout()
 # plt.show()
+
+def weighted_softmax(u, y = ...):
+    return np.exp(-0.5 * np.linalg.norm(y[u])**2)
+
+def soft_thres(lambda_1, c, z_t):
+    return np.sign(z_t) * max(0, np.abs(z_t) - (lambda_1 / c))
