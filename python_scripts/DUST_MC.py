@@ -3,7 +3,33 @@ import torch
 from scipy.fftpack import dct
 import random
 import os
-from python_scripts import add_gaussian_noise
+from python_scripts import utils
+
+# # Compute exponent terms for all u
+#             exponent_terms = np.einsum('ij,ij->j', np.dot(DTD, H), H)
+#             exp_values = np.exp(exponent_terms)
+
+#             # Compute beta_u values
+#             beta_values = weighted_softmax(np.arange(T))
+
+#             # Compute G numerator and denominator using vectorized operations
+#             G_numerator = np.sum(beta_values * exp_values * H, axis=1)
+#             G_denominator = np.sum(beta_values * exp_values)
+
+#             # Compute y_t
+#             if G_denominator != 0:
+#                 G = G_numerator / G_denominator
+#             else:
+#                 G = np.zeros_like(G_numerator)
+
+#             y_t = lambda_2 * G
+
+#             # Here you can update h_t based on y_t and other factors if needed
+#             # Example update rule (this may vary based on your specific algorithm):
+#             # h_t = some_update_function(y_t, other_parameters)
+
+#             # Store the updated h_t back to H
+#             H[:, t] = h_t
 
 
 
@@ -12,6 +38,10 @@ from python_scripts import add_gaussian_noise
 def get_sample(split, Q):
     pass
     
+def weighted_softmax(u):
+    # Define or import your Beta_u function here.
+    # For demonstration purposes, we will use a placeholder function.
+    return np.exp(-u)
 
 def attention_based_algo(A, D, X, K, lambda_1, lambda_2, c):
     # A is measurment sensing matrix (m x n where n << m) and D is initialized by DCT (n x d where d >> n) and X is observed matrix (m x T)
@@ -19,9 +49,48 @@ def attention_based_algo(A, D, X, K, lambda_1, lambda_2, c):
     # Form of s_t = Dh_t where h_t is sparse representation of s_t (d x 1) intialized to 0's
     # K is the number of outer iterations. Inner iterations are for T time periods.
     # lambda_1, lambda_2, c are hyperparameters 
+    
+    m, n, d, T = A.shape[0], A.shape[1], D.shape[1], X.shape[1]
+
+    # initailize H which is d x T and is h_t's concatenated
+    H = np.zeros((d, T))
 
     for k in range(K):
         for t in range(X.shape[1]):
+            h_t = H[:, t]
             
+            # Compute G numerator and denominator
+            G_numerator = np.zeros_like(h_t)
+            G_denominator = 0
+
+            for u in range(T):
+                h_u_prev = H[:, u]
+                beta_u = utils.weighted_softmax(u)
+                exponent_term = np.dot(h_u_prev.T, np.dot(D.T, np.dot(D, h_u_prev)))
+                exp_value = np.exp(exponent_term)
+                G_numerator += beta_u * exp_value * h_u_prev
+                G_denominator += beta_u * exp_value
+
+            # Compute y_t
+            if G_denominator != 0:
+                G = G_numerator / G_denominator
+            else:
+                G = np.zeros_like(G_numerator)
+                
+            y_t = lambda_2 * G
+            
+            prod = np.dot(np.dot(D.T, A.T), np.dot(A, D))
+
+            z_t = np.dot((np.eye(d) - (1/c * prod)), y_t) + (1/c) * np.dot(np.dot(D.T, A.T), X[:, t])
+
+            h_t = utils.soft_thres(lambda_1, c, z_t)
+
+            # Here you can update h_t based on y_t and other factors if needed
+
+            # Store the updated h_t back to H
+            H[:, t] = h_t
+    
+    S = np.dot(D, H)
+    return S
 
 
