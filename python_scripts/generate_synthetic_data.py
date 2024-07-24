@@ -53,7 +53,7 @@ def generate_simple_gaussian_noise(r, c, rak, num_train_instances, num_test_inst
 
     # Loop to generate training data
     for i in range(num_train_instances):
-        M = np.dot(np.random.normal(size=(r, rak)), np.random.normal(size=(rak, c)))
+        M = np.dot(np.random.normal(size = (r, rak)), np.random.normal(size=(rak, c)))
         M_Omega = np.multiply(M, array_Omega)
 
         omega = np.where(array_Omega == 1)
@@ -64,7 +64,7 @@ def generate_simple_gaussian_noise(r, c, rak, num_train_instances, num_test_inst
 
     # Loop to generate test data
     for i in range(num_test_instances):
-        M = np.dot(np.random.normal(size=(r, rak)), np.random.normal(size=(rak, c)))
+        M = np.dot(np.random.normal(size = (r, rak)), np.random.normal(size = (rak, c)))
         M_Omega = np.multiply(M, array_Omega)
 
         omega = np.where(array_Omega == 1)

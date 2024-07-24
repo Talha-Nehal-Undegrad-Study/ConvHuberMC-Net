@@ -111,3 +111,47 @@ def normalize_paths(file_paths):
 
 # plt.tight_layout()
 # plt.show()
+
+def weighted_softmax(u, y = ...):
+    return np.exp(-0.5 * np.linalg.norm(y[u])**2)
+
+def beta_u(idx, H):
+    return np.exp(-1/2 * (np.linalg.norm(H[:, idx]) ** 2))
+
+
+# def soft_thres(lambda_1, c, z_t):
+#     return np.sign(z_t) * max(0, np.abs(z_t) - (lambda_1 / c))
+def soft_thresholding(u, gamma):
+    """
+    Apply soft thresholding to vector u with threshold gamma.
+    
+    Args:
+    u (numpy.ndarray): Input vector
+    gamma (float): Threshold value
+    
+    Returns:
+    numpy.ndarray: Vector after applying soft thresholding
+    """
+    return np.sign(u) * np.maximum(0, np.abs(u) - gamma)
+
+def compute_squared_l2_norm_loss(s, s_star):
+    """
+    Compute the squared L2 norm loss between two matrices s and s_star.
+    
+    Args:
+    s (numpy.ndarray): The matrix s_j,t
+    s_star (numpy.ndarray): The ground truth matrix s_j,t*
+    
+    Returns:
+    float: The total squared L2 norm loss
+    """
+    # Ensure the matrices have the same shape
+    assert s.shape == s_star.shape, "Matrices must have the same dimensions"
+    
+    # Compute the difference matrix
+    difference_matrix = s - s_star
+    
+    # Compute the squared L2 norm (squared Frobenius norm)
+    squared_l2_norm_loss = np.sum(np.square(difference_matrix))
+    
+    return squared_l2_norm_loss
