@@ -115,6 +115,7 @@ def normalize_paths(file_paths):
 def weighted_softmax(u, y = ...):
     return np.exp(-0.5 * np.linalg.norm(y[u])**2)
 
+<<<<<<< HEAD
 def beta_u(idx, H):
     return np.exp(-1/2 * (np.linalg.norm(H[:, idx]) ** 2))
 
@@ -155,3 +156,6 @@ def compute_squared_l2_norm_loss(s, s_star):
     squared_l2_norm_loss = np.sum(np.square(difference_matrix))
     
     return squared_l2_norm_loss
+
+def soft_thres(lambda_1, c, z_t):
+    return np.sign(z_t) * max(0, np.abs(z_t) - (lambda_1 / c))
