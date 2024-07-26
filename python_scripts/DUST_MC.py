@@ -23,7 +23,7 @@ def attention_based_algo(A, D, X, K, lambda_1, lambda_2, c):
     H = np.zeros((d, T))
 
     for k in range(K):
-        for t in range(X.shape[1]):
+        for t in range(T):
             h_t = H[:, t]
             x_t = np.dot(A, X[:, t])
             
