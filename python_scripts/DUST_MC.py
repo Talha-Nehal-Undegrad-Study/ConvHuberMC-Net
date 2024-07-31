@@ -12,8 +12,8 @@ def get_sample(split, Q):
     pass
 
 def attention_based_algo(A, D, X, K, lambda_1, lambda_2, c):
-    # A is measurment sensing matrix (m x n where m << n) and D is initialized by DCT (n x d where d >> n) and X is observed matrix (m x T)
-    # Form of x_t = As_t + e_t where s_t is groundtruth (m x 1) signal and x_t is observed noisy signal (represents 1, 2, ...., T columns of X)
+    # A is measurment sensing matrix (m x n where m << n) and D is initialized by DCT (n x d where d >> n) and X is observed matrix (n x T)
+    # Form of x_t = As_t + e_t where s_t is groundtruth (n x 1) signal and x_t is observed noisy signal (represents 1, 2, ...., T columns of X)
     # Form of s_t = Dh_t where h_t is sparse representation of s_t (d x 1) intialized to 0's
     # K is the number of outer iterations. Inner iterations are for T time periods.
     # lambda_1, lambda_2, c are hyperparameters 
