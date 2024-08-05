@@ -1,0 +1,51 @@
+def soft thres(thres, vec)
+	Q = DH # Q.shape = S.shape = (n, T)
+	return beta * softmax(Q.TQ)
+
+def softmax beta(H, D)
+	[insert code here]
+
+class LISTA
+	forward pass(U, V, X, Z, l1, c)
+		vec = UZ + VX [maybe for loop or parallel processing]
+		thres = l1 / c
+		H* = soft thres(thres, vec) [maybe for loop or parallel processing]
+		return H*
+
+class self attention
+	layer norm [probably learnable params if needed]
+	
+	forward pass(H, D, l2)
+		Z = l2 * H * softmax beta(H, D) # Z.shape = H.shape = (d, T)
+		return Z
+
+class blue box layer
+	self attention, LISTA [object init]
+
+	forward pass(H, D, l2, U, V, X, l1, c)
+		Z = self attention(H, D, l2)
+		H = LISTA(U, V, X, Z, l1, c) [not vectorized => h = LISTA(z) for all t]
+		return H
+
+class dust net
+	# 
+	# hyperparams
+	K blue box layers, mu, sigma, m, n, d, T
+
+	# learnables
+	A [rnd init, (m, n)]
+	D [dct init, (n, d)]
+	U = I_d - ((1/c) * D.T @ A.T @ A @ D) # U.shape = (d, d)
+	V = (1/c) * D.T @ A.T # V.shape = (d, m)
+	l1, l2, c [rnd init?]
+	H = 0 [here or in forward pass, (d, T)]
+
+	forward pass(S)
+		E [gaussian noise matrix]
+		X = AS + E # S.shape = (n, T), X.shape = (m, T)
+		
+		H* = K blue box layers(H, D, l2, U, V, X, l1, c)
+		S* = DH*
+		return S*
+		
+||DH||_2^2 = (DH)^TDH
