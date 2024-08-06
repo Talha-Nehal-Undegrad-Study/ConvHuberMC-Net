@@ -1,9 +1,54 @@
-def soft thres(thres, vec)
-	Q = DH # Q.shape = S.shape = (n, T)
-	return beta * softmax(Q.TQ)
 
-def softmax beta(H, D)
-	[insert code here]
+def soft_thresholding(thres, vec):
+    """
+    Apply soft thresholding to vector vec with threshold thres.
+    
+    Args:
+    vec (numpy.ndarray): Input vector
+    thres (float): Threshold value
+    
+    Returns:
+    numpy.ndarray: Vector after applying soft thresholding
+    """
+    return np.sign(vec) * np.maximum(0, np.abs(vec) - thres)	
+
+
+def compute_attention_map(H, D):
+    """
+    Computes the attention map for the given token vectors and matrix D.
+    
+    Parameters:
+    - H: A 2D array of token vectors (shape: [d, T])
+    - D: A matrix (shape: [n, d])
+    
+    Returns:
+    - A 2D array representing the attention map (shape: [T, T])
+    """
+    
+    # Transpose H to shape (T, d)
+    H = H.T  # Now H is (T, d)
+    
+    # Compute βi values
+    DH = D @ H.T  # Shape of Q (n, T)
+    beta_i = np.exp(-0.5 * np.sum(DH ** 2, axis = 0))  # Shape (T,) - subarashii
+    
+    # Number of tokens
+    T = H.shape[0]
+    
+    # Initialize the attention map
+    attention_map = np.zeros((T, T))
+    
+    # Compute the attention weights
+    for t in range(T):
+        ht = H[t] # (1, d)
+        for s in range(T):
+            hs = H[s] # (1, d)
+            numerator = beta_i[s] * np.exp(ht @ (D.T @ D) @ hs.T)
+            denominator = np.sum([beta_i[i] * np.exp(ht @ (D.T @ D) @ H[i].T) for i in range(T)])
+            attention_map[t, s] = numerator / denominator
+    
+    return attention_map
+	
 
 class LISTA
 	forward pass(U, V, X, Z, l1, c)
@@ -16,7 +61,7 @@ class self attention
 	layer norm [probably learnable params if needed]
 	
 	forward pass(H, D, l2)
-		Z = l2 * H * softmax beta(H, D) # Z.shape = H.shape = (d, T)
+		Z = l2 * H * attention_map(H, D) # Z.shape = H.shape = (d, T)
 		return Z
 
 class blue box layer
@@ -48,4 +93,3 @@ class dust net
 		S* = DH*
 		return S*
 		
-||DH||_2^2 = (DH)^TDH
