@@ -2,6 +2,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from torch.autograd import Variable
+
+
+def to_var(X, CalInGPU):
+    if CalInGPU and torch.cuda.is_available():
+        X = X.to('cuda')
+    else:
+        X = X.to('cpu')
+    return Variable(X)
+
 # Soft Thresholding Function
 def soft_thresholding(thres, mat):
     """
