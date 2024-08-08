@@ -59,10 +59,10 @@ class ImageDataset(data.Dataset):
         return len(self.images_L)
 
 
-def get_dataloaders(params_net, hyper_param_net, sampling_rate, db, ROOT):
-    M_train, M_Omega_train, M_test, M_Omega_test = generate_synthetic_data.generate(
+def get_dataloaders(params_net, hyper_param_net, ROOT):
+    M_train, M_Omega_train, M_test, M_Omega_test = generate_synthetic_data.generate_simple_gaussian_noise(
         params_net['size1'], params_net['size2'], params_net['rank'], 
-        hyper_param_net['TrainInstances'], hyper_param_net['ValInstances'], sampling_rate, db)
+        hyper_param_net['TrainInstances'], hyper_param_net['ValInstances'], mean = hyper_param_net['mu'], sampling_rate = 1, variance = hyper_param_net['sigma'])
 
     # Format and Save Data
     format_data.format(M_train, M_Omega_train, M_test, M_Omega_test, ROOT)

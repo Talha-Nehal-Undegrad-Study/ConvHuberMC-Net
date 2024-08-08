@@ -32,7 +32,7 @@ def gaussian_noise(signal, model, SNR):
     return noise
 
 # Function to add Gaussian noise with mean 0 and given variance
-def add_gaussian_noise(matrix, omega, variance):
+def add_gaussian_noise(matrix, mean, omega, variance):
     noise = np.random.normal(0, np.sqrt(variance), size=omega[0].shape)
     noisy_matrix = matrix.copy()
     noisy_matrix[omega] += noise
