@@ -3,6 +3,7 @@ from torch import nn
 from torch.autograd import Variable
 
 from python_scripts import dustmc_unrolled
+from python_scripts import utils
 
 def get_hyperparameter_grid(Model, TrainInstances, ValInstances, BatchSize, ValBatchSize, num_epochs, learning_rate,
                             K, mu, sigma, m, n, d, T):
@@ -77,10 +78,10 @@ def train_step(model, dataloader, loss_fn, optimizer, TrainInstances, batch, inf
         optimizer.zero_grad()
         with torch.autograd.set_detect_anomaly(False):
             for mat in range(batch): 
-                inputs = D[mat].to(device)
+                inputs = L[mat].to(device)
                 targets_L = L[mat].to(device)
                 outputs_L = model(inputs)
-                loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
+                loss = utils.columnwise_mse_loss(outputs_L, targets_L)
                 loss_mean += loss.item()
         if not inference:
             loss.backward()
@@ -99,11 +100,11 @@ def test_step(model, dataloader, loss_fn, ValInstances, batch):
     with torch.no_grad():
         for _, (D, L) in enumerate(dataloader):
             for mat in range(batch):
-                inputs = D[mat].to(device)   # "mat"th picture
+                inputs = L[mat].to(device)   # "mat"th picture
                 targets_L = L[mat].to(device)
 
                 outputs_L = model(inputs)
-                loss_val = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
+                loss_val = utils.columnwise_mse_loss(outputs_L, targets_L)
                 loss_val_mean += loss_val.item()
 
     loss_val_mean = loss_val_mean/ValInstances

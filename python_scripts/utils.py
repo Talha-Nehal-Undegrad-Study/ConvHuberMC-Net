@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import glob
 import re
 
+import torch
+import torch.nn as nn
+
 c = 1.345
 
 def get_nonzeros(matrix):
@@ -133,27 +136,20 @@ def soft_thresholding(u, gamma):
     """
     return np.sign(u) * np.maximum(0, np.abs(u) - gamma)
 
-def compute_squared_l2_norm_loss(s, s_star):
-    """
-    Compute the squared L2 norm loss between two matrices s and s_star.
+def columnwise_mse_loss(matrix1, matrix2):
+    # Initialize the MSE loss function with reduction='none' to get element-wise squared errors
+    mse_loss_fn = nn.MSELoss(reduction = 'none')
     
-    Args:
-    s (numpy.ndarray): The matrix s_j,t
-    s_star (numpy.ndarray): The ground truth matrix s_j,t*
+    # Compute the element-wise MSE loss
+    elementwise_mse = mse_loss_fn(matrix1, matrix2)
     
-    Returns:
-    float: The total squared L2 norm loss
-    """
-    # Ensure the matrices have the same shape
-    assert s.shape == s_star.shape, "Matrices must have the same dimensions"
+    # Sum the squared differences along the rows (i.e., dimension 0) to get column-wise error
+    columnwise_error = torch.sum(elementwise_mse, dim = 0)
     
-    # Compute the difference matrix
-    difference_matrix = s - s_star
+    # Sum all column-wise errors and average over the total number of columns
+    loss = torch.sum(columnwise_error) / matrix1.size(1)
     
-    # Compute the squared L2 norm (squared Frobenius norm)
-    squared_l2_norm_loss = np.sum(np.square(difference_matrix))
-    
-    return squared_l2_norm_loss
+    return loss
 
 def soft_thres(lambda_1, c, z_t):
     return np.sign(z_t) * max(0, np.abs(z_t) - (lambda_1 / c))
