@@ -36,7 +36,7 @@ def get_model(params_net, hyper_param_net, log, path_whole = None, path_dict = N
         print('Instantiating Model...')
         log.write('Instantiating Model...\n')
         if hyper_param_net['Model'] == 'DUSTMC-Net':
-            net = dustmc_unrolled.DustNet(params_net)
+            net = dustmc_unrolled.DustNet(hyper_param_net)
             print('Model Instantiated...')
             log.write('Model Instantiated...\n')
 
@@ -83,13 +83,13 @@ def train_step(model, dataloader, loss_fn, optimizer, TrainInstances, batch, inf
                 loss = (loss_fn(outputs_L, targets_L))/torch.square(torch.norm(targets_L, p = 'fro'))
                 loss_mean += loss.item()
         if not inference:
-            loss_mean.backward()
+            loss.backward()
             optimizer.step()
     loss_mean = loss_mean/TrainInstances
 
     return loss_mean
 
-def test_step(model, dataloader, loss_fn, CalInGPU, ValInstances, batch):
+def test_step(model, dataloader, loss_fn, ValInstances, batch):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     model.eval()

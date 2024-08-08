@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 import torch.utils.data as data
-from image_py_scripts import generate_synthetic_data
-from image_py_scripts import format_data
+from python_scripts import generate_synthetic_data
+from python_scripts import format_data
 
 # ROOT = 'C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/HuberMC_Data'
 # ROOT = 'C:/Users/HP/Git/ConvHuberMC-Net/HuberMC_Data'
@@ -62,7 +62,7 @@ class ImageDataset(data.Dataset):
 def get_dataloaders(params_net, hyper_param_net, ROOT):
     M_train, M_Omega_train, M_test, M_Omega_test = generate_synthetic_data.generate_simple_gaussian_noise(
         params_net['size1'], params_net['size2'], params_net['rank'], 
-        hyper_param_net['TrainInstances'], hyper_param_net['ValInstances'], mean = hyper_param_net['mu'], sampling_rate = 1, variance = hyper_param_net['sigma'])
+        hyper_param_net['TrainInstances'], hyper_param_net['ValInstances'], sampling_rate = 1, variance = hyper_param_net['sigma'])
 
     # Format and Save Data
     format_data.format(M_train, M_Omega_train, M_test, M_Omega_test, ROOT)

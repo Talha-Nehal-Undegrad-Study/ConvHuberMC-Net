@@ -41,7 +41,7 @@ def generate(r, c, rak, num_train_instances, num_test_instances, sampling_rate, 
 
     return M_train, M_Omega_train, M_test, M_Omega_test
 
-def generate_simple_gaussian_noise(r, c, rak, num_train_instances, num_test_instances, mean, sampling_rate, variance):
+def generate_simple_gaussian_noise(r, c, rak, num_train_instances, num_test_instances, sampling_rate, variance):
     # Generate the Omega matrix with sampling_rate
     array_Omega = np.random.choice([1, 0], (r, c), p = [sampling_rate, 1 - sampling_rate])
 
@@ -68,7 +68,7 @@ def generate_simple_gaussian_noise(r, c, rak, num_train_instances, num_test_inst
         M_Omega = np.multiply(M, array_Omega)
 
         omega = np.where(array_Omega == 1)
-        M_Omega_noisy = gaussian_noise.add_gaussian_noise(M_Omega, mean, omega, variance)
+        M_Omega_noisy = gaussian_noise.add_gaussian_noise(M_Omega, omega, variance)
         
         M_test[i, :, :] = M
         M_Omega_test[i, :, :] = M_Omega_noisy

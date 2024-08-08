@@ -102,27 +102,27 @@ class BlueBoxLayer(nn.Module):
 
 # DustNet Class
 class DustNet(nn.Module):
-    def __init__(self, K, mu, sigma, m, n, d, T):
+    def __init__(self, hyper_param_net):
         super(DustNet, self).__init__()
-        self.K = K
-        self.mu = mu
-        self.sigma = sigma
-        self.m = m
-        self.n = n
-        self.d = d
-        self.T = T
+        self.K = hyper_param_net['K']
+        self.mu = hyper_param_net['mu']
+        self.sigma = hyper_param_net['sigma']
+        self.m = hyper_param_net['m']
+        self.n = hyper_param_net['n']
+        self.d = hyper_param_net['d']
+        self.T = hyper_param_net['T']
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         # Learnable parameters
-        self.A = nn.Parameter(torch.randn(m, n, device = self.device))
-        self.D = nn.Parameter(torch.randn(n, d, device = self.device))  # Replace DCT initialization with random initialization for simplicity
+        self.A = nn.Parameter(torch.randn(self.m, self.n, device = self.device))
+        self.D = nn.Parameter(torch.randn(self.n, self.d, device = self.device))  # Replace DCT initialization with random initialization for simplicity
         self.l1 = nn.Parameter(torch.randn(1, device = self.device))
         self.l2 = nn.Parameter(torch.randn(1, device = self.device))
         self.c = nn.Parameter(torch.randn(1, device = self.device))
         self.H = torch.zeros((self.d, self.T), device = self.device)
 
         # Blue box layers
-        self.blue_box_layers = nn.ModuleList([BlueBoxLayer(self.d, self.c, self.D, self.A) for _ in range(K)])
+        self.blue_box_layers = nn.ModuleList([BlueBoxLayer(self.d, self.c, self.D, self.A) for _ in range(self.K)])
 
     def forward(self, S):
         temp = self.A @ S
