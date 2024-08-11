@@ -44,7 +44,7 @@ def compute_attention_map(H, D):
     
     # Compute βi values
     DH = D @ H_T.T  # Shape of DH (n, T)
-    beta_i = torch.exp(-0.5 * torch.sum(DH ** 2, dim=0))  # Shape (T,)
+    beta_i = torch.exp(-0.5 * torch.sum(DH ** 2, dim = 0))  # Shape (T,)
     
     # Number of tokens
     T = H_T.shape[0]

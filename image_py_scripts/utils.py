@@ -33,7 +33,7 @@ def make_imgs(split = 'train', shape = (150, 300), sampling_rate = 0.2, dB = 5.0
             image = io.imread(img)
             image = color.rgb2gray(img_as_float(image))
             image = np.resize(image, shape)
-
+            
             np.save(os.path.join(ground_truth_train_dir, f'ground_image_MC_train_{idx}.npy'), image)
             
             image_lowrank = run_image_inpainting.add_gmm_noise(image = image, per = sampling_rate, dB = dB)

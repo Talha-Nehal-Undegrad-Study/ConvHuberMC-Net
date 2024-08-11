@@ -17,6 +17,8 @@ from python_scripts import format_data
 
 #     return L, D
 
+
+
 class ImageDataset(data.Dataset):
     def __init__(self, NumInstances, shape, split, ROOT, transform = None):
         self.shape = shape
