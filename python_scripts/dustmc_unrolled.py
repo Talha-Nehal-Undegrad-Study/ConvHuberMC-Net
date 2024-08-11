@@ -126,7 +126,9 @@ class DustNet(nn.Module):
 
     def forward(self, S):
         temp = self.A @ S
-        E = torch.randn_like(temp) * self.sigma + self.mu
+        # For GMM we will generate freshly array_Omega and then use similar process (line 57 - 63 in generate_synthetic_data.py) to get its corrupted entry
+        E = (torch.randn_like(temp) * self.sigma + self.mu)
+        
         X = temp + E
         
         for layer in self.blue_box_layers:

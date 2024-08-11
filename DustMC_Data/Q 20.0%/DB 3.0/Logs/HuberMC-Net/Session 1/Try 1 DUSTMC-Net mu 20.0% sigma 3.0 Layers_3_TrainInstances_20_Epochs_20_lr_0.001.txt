@@ -8,3 +8,63 @@ Parameters =
 {'size1': 150, 'size2': 300, 'rank': 10, 'device': 'cpu', 'layers': 3, 'CalInGPU': True}
 
 Loading phase...
+Finished loading.
+
+Epoch: 1 2024-08-12 00:13:51
+
+Epoch: 2 2024-08-12 00:17:08
+
+Epoch: 3 2024-08-12 00:20:16
+
+Epoch: 4 2024-08-12 00:23:49
+
+Epoch: 5 2024-08-12 00:26:54
+
+Loading and calculating training batches...
+Training time is 132.562616Loading and calculating validation batches...
+Test time is 46.104702Epoch [5/20], Mean Training Loss:2.32550e+10, Mean Validation Loss:2.11636e+10
+saved at [epoch5/20]
+Epoch: 6 2024-08-12 00:29:53
+
+Epoch: 7 2024-08-12 00:33:00
+
+Epoch: 8 2024-08-12 00:36:02
+
+Epoch: 9 2024-08-12 00:39:04
+
+Epoch: 10 2024-08-12 00:42:24
+
+Loading and calculating training batches...
+Training time is 257.680768Loading and calculating validation batches...
+Test time is 93.171924Epoch [10/20], Mean Training Loss:1.67877e+10, Mean Validation Loss:1.55229e+10
+saved at [epoch10/20]
+Epoch: 11 2024-08-12 00:48:15
+
+Epoch: 12 2024-08-12 00:54:58
+
+Epoch: 13 2024-08-12 01:02:35
+
+Epoch: 14 2024-08-12 01:05:40
+
+Epoch: 15 2024-08-12 01:08:00
+
+Loading and calculating training batches...
+Training time is 103.380715Loading and calculating validation batches...
+Test time is 36.619609Epoch [15/20], Mean Training Loss:1.30751e+10, Mean Validation Loss:1.21441e+10
+saved at [epoch15/20]
+Epoch: 16 2024-08-12 01:10:20
+
+Epoch: 17 2024-08-12 01:12:41
+
+Epoch: 18 2024-08-12 01:15:01
+
+Epoch: 19 2024-08-12 01:17:22
+
+Epoch: 20 2024-08-12 01:19:41
+
+Loading and calculating training batches...
+Training time is 104.900851Loading and calculating validation batches...
+Test time is 36.525485Epoch [20/20], Mean Training Loss:9.19481e+09, Mean Validation Loss:5.86464e+08
+saved at [epoch20/20]
+
+Min Loss = 5.8646e+08
