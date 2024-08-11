@@ -84,10 +84,8 @@ class ImageDataset(data.Dataset):
                 D = np.load(os.path.join(path, f'groundtruth/ground_image_MC_test_' + str(n) + '.npy'))
                 images_D[n] = torch.from_numpy(D)
 
-
         self.transform = transform
         if not dust:
-            print('gg')
             self.images_L = images_L
         self.images_D = images_D
 
@@ -95,7 +93,7 @@ class ImageDataset(data.Dataset):
         if not self.dust:
             L = self.images_L[index]
         D = self.images_D[index]
-        return D if self.dust else L, D
+        return D if self.dust else (L, D) # always remember to return the latter in brackets
 
     def __len__(self):
         return len(self.images_D)

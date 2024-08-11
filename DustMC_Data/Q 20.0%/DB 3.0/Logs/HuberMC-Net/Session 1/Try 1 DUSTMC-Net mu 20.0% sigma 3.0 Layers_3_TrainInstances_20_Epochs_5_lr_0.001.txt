@@ -8,3 +8,9 @@ Parameters =
 {'size1': 150, 'size2': 300, 'rank': 10, 'device': 'cpu', 'layers': 3, 'CalInGPU': True}
 
 Loading phase...
+Finished loading.
+
+Epoch: 1 2024-08-11 23:59:38
+
+Epoch: 2 2024-08-12 00:03:31
+
