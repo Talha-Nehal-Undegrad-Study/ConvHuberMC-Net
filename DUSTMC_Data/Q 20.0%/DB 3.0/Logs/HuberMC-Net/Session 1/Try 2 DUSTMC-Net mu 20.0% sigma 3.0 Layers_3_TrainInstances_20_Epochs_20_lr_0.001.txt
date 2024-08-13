@@ -1,0 +1,14 @@
+Project Name: Try 2 DUSTMC-Net mu 20.0% sigma 3.0
+
+Configuring network...
+Instantiating Model...
+Model Instantiated...
+
+Parameters = 
+{'size1': 28, 'size2': 28, 'rank': 10, 'device': 'cpu', 'layers': 3, 'CalInGPU': True}
+
+Loading phase...
+Finished loading.
+
+Epoch: 1 2024-08-13 21:42:17
+

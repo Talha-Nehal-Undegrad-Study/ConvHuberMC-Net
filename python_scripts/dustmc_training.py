@@ -73,12 +73,13 @@ def train_step(model, dataloader, loss_fn, optimizer, TrainInstances, batch, inf
     # Initalize loss for lowrank matrices which will be calculated per batch for each epoch
     loss_mean = 0
   
-    for _, (D) in enumerate(dataloader): # usually _, (D, L)
+    for _, (image, label) in enumerate(dataloader): # usually _, (D, L)
         # set the gradients to zero at the beginning of each epoch
         optimizer.zero_grad()
+        image = image.squeeze()
         with torch.autograd.set_detect_anomaly(False):
-            for mat in range(batch): 
-                inputs = D[mat].to(device)
+            for mat in range(batch):
+                inputs = image[mat].to(device)
                 # targets_L = L[mat].to(device)
                 outputs_D = model(inputs)
                 loss = utils.columnwise_mse_loss(outputs_D, inputs)

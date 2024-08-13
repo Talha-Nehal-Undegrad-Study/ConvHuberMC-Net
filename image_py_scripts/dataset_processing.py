@@ -8,8 +8,11 @@ from image_py_scripts import utils
 from pathlib import Path
 import os
 
+# NOTE: os.getcwd().replace('\\', '/') returns path until ConvHuberMC-Net folder as a string
+
 # DATA_ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/convmc-net/Image_Inpainting_Data/BSDS300/images')
-DATA_ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/Image_Inpainting_Data/BSDS300/images')
+# DATA_ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/Image_Inpainting_Data/BSDS300/images')
+DATA_ROOT = Path(os.getcwd().replace('\\', '/') + '/Image_Inpainting_Data/BSDS300/images')
 train_dir = DATA_ROOT / 'train'
 test_dir = DATA_ROOT / 'test'
 

@@ -68,11 +68,12 @@ def compute_attention_map(H, D):
 class LISTA(nn.Module):
     def __init__(self, d, c, D, A):
         super(LISTA, self).__init__()
-        self.U = nn.Parameter(torch.eye(d) - (1 / c) * D.T @ A.T @ A @ D)
-        self.V = nn.Parameter((1 / c) * D.T @ A.T)
+        self.U = nn.Parameter(torch.eye(d) - (1 / c) * D.T @ A.T @ A @ D) # (d, d)
+        self.V = nn.Parameter((1 / c) * D.T @ A.T) # (d, m)
         self.c = c
 
     def forward(self, X, Z, l1):
+        # print(self.U.shape, Z.shape, self.V.shape, X.shape)
         mat = self.U @ Z + self.V @ X
         thres = l1 / self.c
         H_star = soft_thresholding(thres, mat)
@@ -86,6 +87,7 @@ class SelfAttention(nn.Module):
 
     def forward(self, H, D, l2):
         attn_map = compute_attention_map(H, D)
+        # print(H.shape, D.shape, attn_map.shape)
         Z = l2 * H @ attn_map
         return Z
 
@@ -116,7 +118,7 @@ class DustNet(nn.Module):
 
         # Learnable parameters
         self.A = nn.Parameter(torch.rand(self.m, self.n, device = self.device))
-        D_init = torch.randn(150, 200, device = self.device)
+        D_init = torch.randn(self.n, self.d, device = self.device)
         # Apply DCT to the matrix
         D_dct = dct(D_init.numpy(), type = 2, norm = 'ortho')
 
@@ -131,14 +133,17 @@ class DustNet(nn.Module):
         self.blue_box_layers = nn.ModuleList([BlueBoxLayer(self.d, self.c, self.D, self.A) for _ in range(self.K)])
 
     def forward(self, S):
+        assert S.shape == (self.n, self.T), 'S.shape should be (n, T)'
+        
         temp = self.A @ S
-        print(f'temp: {temp}')
+        # print(f'temp: {temp}')
         # For GMM we will generate freshly array_Omega and then use similar process (line 57 - 63 in generate_synthetic_data.py) to get its corrupted entry
         E = (torch.randn_like(temp) * self.sigma + self.mu)
-        print(f'E: {E}')
+        # print(f'E: {E}')
         
-        X = temp + E
-        print(f'X: {X}')
+        X = temp + E # (m, T)
+        # print(self.A.shape, S.shape)
+        # print(f'X: {X}')
         
         for layer in self.blue_box_layers:
             H = layer(self.H, self.D, self.l2, X, self.l1, self.c)

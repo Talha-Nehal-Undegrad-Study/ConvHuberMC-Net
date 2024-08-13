@@ -16,7 +16,8 @@ from pathlib import Path
 
 
 # ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/convmc-net/Image_Inpainting_Data/BSDS300/images')
-ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/Image_Inpainting_Data/BSDS300/images')
+# ROOT = Path('C:/Users/Talha/OneDrive - Higher Education Commission/Documents/GitHub/ConvHuberMC/Image_Inpainting_Data/BSDS300/images')
+ROOT = Path(os.getcwd().replace('\\', '/') + '/Image_Inpainting_Data/BSDS300/images')
 train_dir = ROOT / 'train'
 test_dir = ROOT / 'test'
 
