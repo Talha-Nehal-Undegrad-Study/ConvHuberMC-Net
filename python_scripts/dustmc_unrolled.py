@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from scipy.fftpack import dct
 
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def to_var(X, CalInGPU):
     if CalInGPU and torch.cuda.is_available():
@@ -114,26 +115,27 @@ class DustNet(nn.Module):
         self.n = hyper_param_net['n']
         self.d = hyper_param_net['d']
         self.T = hyper_param_net['T']
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         # Learnable parameters
-        self.A = nn.Parameter(torch.rand(self.m, self.n, device = self.device))
-        D_init = torch.randn(self.n, self.d, device = self.device)
+        self.A = nn.Parameter(torch.rand(self.m, self.n, device = DEVICE))
+        D_init = torch.randn(self.n, self.d, device = DEVICE)
         # Apply DCT to the matrix
         D_dct = dct(D_init.numpy(), type = 2, norm = 'ortho')
 
         # Convert the DCT result back to a torch tensor and make it a learnable parameter
-        self.D = nn.Parameter(torch.tensor(D_dct, device = self.device, dtype = torch.float32))  # Replace DCT initialization with random initialization for simplicity
-        self.l1 = nn.Parameter(torch.randn(1, device = self.device))
-        self.l2 = nn.Parameter(torch.randn(1, device = self.device))
-        self.c = nn.Parameter(torch.randn(1, device = self.device))
-        self.H = torch.zeros((self.d, self.T), device = self.device)
+        self.D = nn.Parameter(torch.tensor(D_dct, device = DEVICE, dtype = torch.float32))  # Replace DCT initialization with random initialization for simplicity
+        self.l1 = nn.Parameter(torch.randn(1, device = DEVICE))
+        self.l2 = nn.Parameter(torch.randn(1, device = DEVICE))
+        self.c = nn.Parameter(torch.randn(1, device = DEVICE))
+        self.H = torch.zeros((self.d, self.T), device = DEVICE)
 
         # Blue box layers
         self.blue_box_layers = nn.ModuleList([BlueBoxLayer(self.d, self.c, self.D, self.A) for _ in range(self.K)])
 
     def forward(self, S):
-        assert S.shape == (self.n, self.T), 'S.shape should be (n, T)'
+        # print(S.shape)
+        assert S.shape == (self.n, self.T), f'S.shape should be {(self.n, self.T)}, but is {S.shape}.'
         
         temp = self.A @ S
         # print(f'temp: {temp}')

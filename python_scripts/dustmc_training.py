@@ -74,12 +74,16 @@ def train_step(model, dataloader, loss_fn, optimizer, TrainInstances, batch, inf
     loss_mean = 0
   
     for _, (image, label) in enumerate(dataloader): # usually _, (D, L)
+        if _ >= 200:
+            break
+        # print(_)
         # set the gradients to zero at the beginning of each epoch
         optimizer.zero_grad()
         image = image.squeeze()
         with torch.autograd.set_detect_anomaly(False):
             for mat in range(batch):
                 inputs = image[mat].to(device)
+                # print(inputs.shape)
                 # targets_L = L[mat].to(device)
                 outputs_D = model(inputs)
                 loss = utils.columnwise_mse_loss(outputs_D, inputs)
@@ -100,8 +104,12 @@ def test_step(model, dataloader, loss_fn, ValInstances, batch):
     # Validation
     with torch.no_grad():
         for _, (image, label) in enumerate(dataloader):
+            if _ >= 100:
+                break
+
+            image = image.squeeze()
             for mat in range(batch):
-                inputs = D[mat].to(device)   # "mat"th picture
+                inputs = image[mat].to(device)   # "mat"th picture
                 # targets_L = L[mat].to(device)
 
                 outputs_D = model(inputs)
