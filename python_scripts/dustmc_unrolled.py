@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from torch.autograd import Variable
+from scipy.fftpack import dct
 
 
 def to_var(X, CalInGPU):
@@ -114,8 +115,13 @@ class DustNet(nn.Module):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         # Learnable parameters
-        self.A = nn.Parameter(torch.randn(self.m, self.n, device = self.device))
-        self.D = nn.Parameter(torch.randn(self.n, self.d, device = self.device))  # Replace DCT initialization with random initialization for simplicity
+        self.A = nn.Parameter(torch.rand(self.m, self.n, device = self.device))
+        D_init = torch.randn(150, 200, device = self.device)
+        # Apply DCT to the matrix
+        D_dct = dct(D_init.numpy(), type = 2, norm = 'ortho')
+
+        # Convert the DCT result back to a torch tensor and make it a learnable parameter
+        self.D = nn.Parameter(torch.tensor(D_dct, device = self.device, dtype = torch.float32))  # Replace DCT initialization with random initialization for simplicity
         self.l1 = nn.Parameter(torch.randn(1, device = self.device))
         self.l2 = nn.Parameter(torch.randn(1, device = self.device))
         self.c = nn.Parameter(torch.randn(1, device = self.device))
@@ -126,10 +132,13 @@ class DustNet(nn.Module):
 
     def forward(self, S):
         temp = self.A @ S
+        print(f'temp: {temp}')
         # For GMM we will generate freshly array_Omega and then use similar process (line 57 - 63 in generate_synthetic_data.py) to get its corrupted entry
         E = (torch.randn_like(temp) * self.sigma + self.mu)
+        print(f'E: {E}')
         
         X = temp + E
+        print(f'X: {X}')
         
         for layer in self.blue_box_layers:
             H = layer(self.H, self.D, self.l2, X, self.l1, self.c)
