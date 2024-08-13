@@ -99,7 +99,7 @@ def test_step(model, dataloader, loss_fn, ValInstances, batch):
 
     # Validation
     with torch.no_grad():
-        for _, (D) in enumerate(dataloader):
+        for _, (image, label) in enumerate(dataloader):
             for mat in range(batch):
                 inputs = D[mat].to(device)   # "mat"th picture
                 # targets_L = L[mat].to(device)
