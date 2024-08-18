@@ -46,22 +46,23 @@ def compute_attention_map(H, D):
     
     # Compute βi values
     DH = D @ H_T.T  # Shape of DH (n, T)
-    beta_i = torch.exp(-0.5 * torch.sum(DH ** 2, dim = 0))  # Shape (T,)
+    # beta_i = torch.exp(-0.5 * torch.sum(DH ** 2, dim = 0))  # Shape (T,)
     
     # Number of tokens
     T = H_T.shape[0]
     
     # Initialize the attention map
     attention_map = torch.zeros((T, T), device = H.device)
+    attention_map = torch.softmax(H_T @ D.T @ D @ H_T.T, dim = -1) # column wise softmax
     
     # Compute the attention weights
-    for t in range(T):
-        ht = H_T[t]  # Shape (d,)
-        ht_DTD = ht @ (D.T @ D)  # Precompute ht @ (D.T @ D) for efficiency
-        exp_terms = torch.exp(ht_DTD @ H_T.T)  # Shape (T,)
-        numerator = beta_i * exp_terms  # Shape (T,)
-        denominator = torch.sum(numerator)  # Sum all elements to get the denominator
-        attention_map[t, :] = numerator / denominator  # Assign the row of attention_map
+    # for t in range(T):
+    #     ht = H_T[t]  # Shape (d,)
+    #     ht_DTD = ht @ (D.T @ D)  # Precompute ht @ (D.T @ D) for efficiency
+    #     exp_terms = torch.exp(ht_DTD @ H_T.T)  # Shape (T,)
+    #     numerator = exp_terms  # Shape (T,)
+    #     denominator = torch.sum(numerator)  # Sum all elements to get the denominator
+    #     attention_map[t, :] = numerator / denominator  # Assign the row of attention_map
     
     return attention_map
 
