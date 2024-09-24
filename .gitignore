@@ -7,3 +7,7 @@
 # Ignore data files
 **/*.jpg
 **/*.npy
+**/*.txt
+
+# Ignore venv files
+.venv/
